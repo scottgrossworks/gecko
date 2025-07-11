@@ -144,9 +144,9 @@ def render_subs( subscription_links ):
     header_html = "" 
     header_html += f"""
     <tr>
-    <td style='color: #FFFFFF; padding-top: 10px;'>
+    <td style='color: white; padding-top: 10px;'>
         <div style='display: flex; justify-content: space-between; align-items: center;'>
-        <span>{formatted_date}</span>
+        <span><font style='color:gold; font-weight:600'>{formatted_date}</font></span>
         <span style='text-align: right;'>{subscription_links}</span>
         </div>
     </td>
@@ -215,7 +215,7 @@ def render_email_template(stories, api_endpoint="https://api.example.com/subscri
         # combine fields into story block HTML content
         #
         
-        story_start = "<table width='100%' border='0' cellspacing='0' cellpadding='10' bgcolor='#000000' style='color:#FFFFFF;margin-bottom: 25px;'><tr><td bgcolor='#000000'>"
+        story_start = "<table width='100%' border='0' cellspacing='0' cellpadding='10' bgcolor='#000000' style='color:#FFFFFF;margin-bottom: 20px;'><tr><td bgcolor='#000000'>"
 
         # Split title from rest with a true break
         # Put category first, then title, then smaller URL
