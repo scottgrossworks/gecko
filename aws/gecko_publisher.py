@@ -1,29 +1,14 @@
 '''
 THIS IS THE lambda_function.py code
 
-Fetches and updates stories:
-Queries DynamoDB for top stories with "queued" status
-Updates them to "published" status with timestamp
-Uses batch operations for efficiency
+Handles /publish
 
-Renders email content by invoking the render_email Lambda:
-Calls the existing render_email Lambda function
-Uses a placeholder for the recipient email
+Sends newsletter to all subscribers in DynamoDB (production run)
 
-Fetches subscribers:
-Gets all users with "subscribed" status
-Handles pagination for large subscriber lists
+No preview, no web rendering, no single-email outreach
 
-Sends personalized emails:
-Replaces the placeholder with each recipient's email
-Implements rate limiting with sleep()
-Handles SES errors and throttling with retries
-Logs progress and results
-
-Configuration via environment variables:
-Table names, API endpoint, email source
-Batch size and sleep time for rate limiting
 '''
+
 import os
 import json
 import boto3
@@ -43,12 +28,103 @@ lambda_client = boto3.client('lambda')
 
 # Environment variables
 TABLE_NAME = os.environ.get('DDB_name', 'gecko_db')
-API_ENDPOINT = os.environ.get('GECKO_API', 'https://api.scottgross.works/subscribe')
-EMAIL_SOURCE = os.environ.get('EMAIL_SOURCE', 'gecko@scottgross.works')
-RENDER_EMAIL_FUNCTION = os.environ.get('RENDER_EMAIL_FUNCTION', 'gecko_email_render')
+
+RENDER_FUNCTION = os.environ.get('RENDER_FUNCTION', 'gecko_render')
+
 GSI_NAME = os.environ.get('GSI', 'status-index')  # GSI name for querying subscribers
 BATCH_SIZE = int(os.environ.get('BATCH_SIZE', '10'))  # Number of emails before sleep
 SLEEP_TIME = float(os.environ.get('SLEEP_TIME', '1.0'))  # Sleep time in seconds
+
+EMAIL_SOURCE = os.environ.get('EMAIL_SOURCE', 'gecko@scottgross.works')
+
+UNSUBSCRIBE_BODY = (
+    "Maybe it's a mistake, but I need a break from the flow of news and insights. "
+    "Like Gordon Gekko at the end of Wall Street, I’m stepping away — for now. "
+    "Please unsubscribe me from Gecko's Birthday."
+    )
+
+
+
+
+##
+##
+##
+def format_date():
+    """Format the current date for the newsletter"""
+    return datetime.now().strftime("%B %d, %Y")
+
+
+
+##
+## Helper function -- return the ASCII header
+##
+def getHeaderAscii():
+ # Create the header HTML directly with proper colors and spacing
+    header_html = ""
+    
+    # Top border - chartreuse green
+    header_html += "<tr style='padding-left:20px;'>"
+    header_html += "<td style='color: chartreuse;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+    header_html += "╔════════════════════════════════════════════╗</td></tr>"
+    
+    # GECKO'S BIRTHDAY line - with red asterisk
+    header_html += "<tr style='padding-left:20px;'><td>"
+    header_html += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+    header_html += "<span style='color: chartreuse;'>{&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+    header_html += "<font color='red' style='font-weight:600;letter-spacing:0.1em;'>GECKO'S BIRTHDAY</font></span>"
+    header_html += "<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>"
+    header_html += "<span style='color: red;'>*</span>"
+    header_html += "<span style='color: chartreuse;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.<font style='letter-spacing:0.1em;'>&nbsp;&nbsp;║</font></span>"
+    header_html += "</td></tr>"
+    
+    # News • Markets • AI line - with white text and carets
+    header_html += "<tr style='padding-left:20px;'><td>"
+    header_html += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+    header_html += "<span style='color: chartreuse;'>{&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>"
+    header_html += "<span style='color: #FFFFFF;'>News • Markets • Ai</span>"
+    header_html += "<span style='color: #FFFFFF;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>"
+    header_html += "<span style='color: #FFFFFF;'>^^^^^^^^^</span>"
+    header_html += "<span style='color: chartreuse;'>══╝</span>"
+    header_html += "</td></tr>"
+    
+    # By Scott Gross line - with white carets and red dashes
+    header_html += "<tr style='padding-left:20px;'><td>"
+    header_html += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+    header_html += "<span style='color: chartreuse;'>{&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;By Scott Gross</span>"
+    header_html += "<span style='color: chartreuse;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>"
+    header_html += "<span style='color: #FFFFFF;'>^^</span>"
+    header_html += "<span style='color: red;'>----</span>"
+    header_html += "<span style='color: #FFFFFF;'>^^^</span>"
+    header_html += "<span style='color: chartreuse;'>══╗</span>"
+    header_html += "</td></tr>"
+    
+    # Bottom border - chartreuse green
+    header_html += "<tr style='padding-left:20px'>"
+    header_html += "<td style='color: chartreuse;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+    header_html += "╚════════════════════════════════════════════╝</td></tr>"
+
+    return header_html
+
+
+##
+##
+##
+def render_subs( subscription_links ):
+
+    formatted_date = format_date()
+    header_html = "" 
+    header_html += f"""
+    <tr>
+    <td style='color: white; padding-top: 10px;'>
+        <div style='display: flex; justify-content: space-between; align-items: center;'>
+        <span><font style='color:gold; font-weight:600'>{formatted_date}</font></span>
+        <span style='text-align: right;'>{subscription_links}</span>
+        </div>
+    </td>
+    </tr>
+    """
+    return header_html
+
 
 
 ##
@@ -108,60 +184,81 @@ def get_and_update_stories(count=3):
 
 
 
+
+
 ##
+## Render the email version of the newsletter
 ##
+def render_email_version( stories, EMAIL_TARGET ):
+
+    # GET STANDARD HEADER HTML SAME FOR ALL VERSIONS
+    header_html = getHeaderAscii()
+
+     
+    mailto_subscribe = (
+        f"mailto:{EMAIL_TARGET}"
+        f"?subject=Subscribe%20me%20to%20Gecko's%20Birthday"
+        f"&body={urllib.parse.quote(SUBSCRIBE_BODY)}"
+    )
+
+    sub_html = render_subs( mailto_subscribe )
+
+    header_html += sub_html
+
+    footer_html = f"<br><a href='{mailto_subscribe}' style='color:red;text-decoration:none;'>Subscribe</a>"
+
+
+    # RENDER THE STORIES AS HTML STRING
+    stories_html = render_stories(stories)
+
+
+    ## COMPOSE THE COMPLETE HTML
+    ##
+    email_html = f"""<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Gecko's Birthday Today</title><style>body,html{{background-color:#000000;color:#FFFFFF;margin:0;padding:0;font-family:'Courier New',monospace;}}</style></head><body bgcolor='#000000' text='white' link='white' alink='white' style='background-color:black;color:white;margin:0;padding:0;font-family:"Courier New",monospace;'><BR><BR><table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black'><tr><td align='center'><table width='600' border='1' cellspacing='0' cellpadding='20' bordercolor='white' bgcolor='black' style='border:1px solid white;'><tr><td bgcolor='black'><table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black' style='font-family:"Courier New",monospace;'>{header_html}</table><hr color='white' size='1' style='border:none;border-top:1px solid white;margin:20px 0;'>{stories_html}<hr color='white' size='1' style='border:none;border-top:1px solid white;margin:20px 0;'><div align='center' style='color:chartreuse;font-size:12px;text-align:center;margin-top:30px;'>&copy; {datetime.now().year} GECKO'S BIRTHDAY Newsletter. All rights reserved.{footer_html}</div></td></tr></table></td></tr></table></body></html>"""
+
+
+    return email_html
+
+
+
+
 ##
-def invoke_render_email(stories, api_endpoint, recipient_email, recipient_status):
-    """
-    Invoke the render_email Lambda function to generate the email content
-    
-    Args:
-        stories (list): List of story items in DynamoDB format
-        api_endpoint (str): API endpoint for subscription management
-        recipient_email (str): Recipient email address (or placeholder)
-        recipient_status (str): Recipient subscription status
-        
-    Returns:
-        str: Rendered HTML email content
-    """
+## PASS TO RENDER_FUNCTION
+##
+def render_stories(stories):
     try:
-        # Prepare payload for the render_email Lambda
-        payload = {
-            'stories': stories,
-            'api_endpoint': api_endpoint,
-            'recipient': {
-                'email': recipient_email,
-                'status': recipient_status
+            # Prepare payload for the render_email Lambda
+            payload = {
+                'stories': stories,
             }
-        }
-        
-        logger.info(f"Invoking {RENDER_EMAIL_FUNCTION} Lambda")
-        
-        # Invoke the render_email Lambda synchronously
-        response = lambda_client.invoke(
-            FunctionName=RENDER_EMAIL_FUNCTION,
-            InvocationType='RequestResponse',
-            Payload=json.dumps(payload)
-        )
-        
-        # Parse the response
-        response_payload = json.loads(response['Payload'].read().decode())
-        
-        if response['StatusCode'] != 200:
-            logger.error(f"Error invoking {RENDER_EMAIL_FUNCTION} Lambda: {response_payload}")
-            raise Exception(f"{RENDER_EMAIL_FUNCTION} Lambda returned status {response['StatusCode']}")
-        
-        # Extract the email content from the response
-        email_content = response_payload.get('email_content')
-        
-        if not email_content:
-            logger.error(f"No email content returned from {RENDER_EMAIL_FUNCTION} Lambda: {response_payload}")
-            raise Exception(f"No email content returned from {RENDER_EMAIL_FUNCTION} Lambda")
-        
-        return email_content
-        
+            
+            logger.info(f"Invoking {RENDER_FUNCTION} Lambda")
+            
+            # Invoke the render_email Lambda synchronously
+            response = lambda_client.invoke(
+                FunctionName=RENDER_FUNCTION,
+                InvocationType='RequestResponse',
+                Payload=json.dumps(payload)
+            )
+            
+            # Parse the response
+            response_payload = json.loads(response['Payload'].read().decode())
+            
+            if response['StatusCode'] != 200:
+                logger.error(f"Error invoking {RENDER_FUNCTION} Lambda: {response_payload}")
+                raise Exception(f"{RENDER_FUNCTION} Lambda returned status {response['StatusCode']}")
+            
+            # Extract the email content from the response
+            html_content = response_payload.get('html_content')
+            
+            if not html_content:
+                logger.error(f"No html content returned from {RENDER_FUNCTION} Lambda: {response_payload}")
+                raise Exception(f"No html content returned from {RENDER_FUNCTION} Lambda")
+            
+            return html_content
+            
     except Exception as e:
-        logger.error(f"Error invoking {RENDER_EMAIL_FUNCTION} Lambda: {str(e)}")
+        logger.error(f"Error invoking {RENDER_FUNCTION} Lambda: {str(e)}")
         raise
 
 
@@ -207,21 +304,50 @@ def get_subscribers():
 
 
 
-##
-##
-##
-def send_emails_to_subscribers(subscribers, email_content, subject):
-    """
-    Send personalized emails to all subscribers with rate limiting
+
+"""
+A Better Heuristic for the Subject Line
+Let’s extract the first 2–4 “good” words from the title, 
+skipping things like “the”, “a”, “an”, and ignoring punctuation. 
+
+
+Get the title string (if present).
+Split into words.
+Skip common stopwords at the start.
+Take the next 2–4 words (configurable).
+Join them for a concise subject.
+Fallback to 'Newsletter' if not enough info.
+"""
+def extract_subject_snippet(title, num_words=3):
+    if not title:
+        return "Newsletter"
+    # Remove punctuation
+    cleaned = re.sub(r'[^\w\s]', '', title)
+    words = cleaned.split()
+    # List of common stopwords to skip at the beginning
+    stopwords = {'the', 'a', 'an', 'this', 'that', 'these', 'those'}
+    # Skip leading stopwords
+    filtered = [w for w in words if w.lower() not in stopwords or words.index(w) > 0]
+    # Take the first num_words after skipping stopwords
+    snippet = " ".join(filtered[:num_words])
+    return snippet if snippet else "Newsletter"
+
+
+
+
+"""
+Send personalized emails to all subscribers with rate limiting
+
+Args:
+    subscribers (list): List of subscriber items
+    email_content (str): HTML email content with placeholder for email
+    subject (str): Email subject line
     
-    Args:
-        subscribers (list): List of subscriber items
-        email_content (str): HTML email content with placeholder for email
-        subject (str): Email subject line
-        
-    Returns:
-        int: Number of emails sent
-    """
+Returns:
+    int: Number of emails sent
+"""
+def send_emails_to_subscribers(subscribers, email_content, subject):
+
     sent_count = 0
     error_count = 0
     
@@ -285,43 +411,6 @@ def send_emails_to_subscribers(subscribers, email_content, subject):
 
 
 
-##
-##
-##
-def get_stories_without_update(count=3):
-    """
-    Fetch top stories from DynamoDB without updating their status
-    
-    Args:
-        count (int): Number of stories to fetch
-        
-    Returns:
-        list: List of story items in DynamoDB format
-    """
-    try:
-        # Query for top stories with no published_date
-        response = dynamodb.query(
-            TableName=TABLE_NAME,
-            KeyConditionExpression='#pk = :pk',
-            ExpressionAttributeNames={'#pk': 'pk'},
-            ExpressionAttributeValues={':pk': {'S': 'story'}},
-            ScanIndexForward=False,  # Descending order by sort key
-            Limit=count
-        )
-        
-        stories = response.get('Items', [])
-        
-        if not stories:
-            logger.warning("No stories found in DynamoDB")
-            
-        return stories
-        
-    except ClientError as e:
-        logger.error(f"Error fetching stories: {str(e)}")
-        raise
-
-
-
 
 
 ##
@@ -329,20 +418,9 @@ def get_stories_without_update(count=3):
 ##
 def lambda_handler(event, context):
     try:
-        # Check if this is a view-only request
-        view_only = False
-        if isinstance(event, dict) and event.get('queryStringParameters', {}) and event.get('queryStringParameters', {}).get('view') == 'true':
-            view_only = True
-            logger.info("View-only mode requested")
-        
-        # Check if this is a direct email request
-        single_recipient = None
-        if isinstance(event, dict) and 'email' in event.get('queryStringParameters', {}):
-            single_recipient = event['queryStringParameters']['email']
-            logger.info(f"Single recipient mode for: {single_recipient}")
-        
+
         # 1. Get top stories and update their status (only update if not view-only)
-        stories = get_and_update_stories(count=3) if not view_only else get_stories_without_update(count=3)
+        stories = get_and_update_stories(count=3)
         
         if not stories:
             return {
@@ -351,44 +429,32 @@ def lambda_handler(event, context):
                 'headers': {'Content-Type': 'application/json'}
             }
         
-        # 2. Invoke render_email Lambda to generate email content
-        recipient_status = "new" if view_only or single_recipient else "subscribed"
-        email_content = invoke_render_email(
-            stories, 
-            API_ENDPOINT, 
-            single_recipient or "PLACEHOLDER",
-            recipient_status
-        )
+
+        # 2.  Get all subscribed users
+        subscribers = get_subscribers()
         
-        # If view-only, return the HTML directly
-        if view_only:
+        if not subscribers:
             return {
-                'statusCode': 200,
-                'body': email_content,
-                'headers': {'Content-Type': 'text/html'}
+                'statusCode': 404,
+                'body': json.dumps({"message": "No subscribed users found"}),
+                'headers': {'Content-Type': 'application/json'}
             }
         
-        # 3. Get subscribers or use provided email
-        if single_recipient:
-            # Create a mock subscriber item for the single recipient
-            subscribers = [{
-                'email': {'S': single_recipient},
-                'status': {'S': 'preview'}
-            }]
-        else:
-            # Get all subscribed users
-            subscribers = get_subscribers()
-            
-            if not subscribers:
-                return {
-                    'statusCode': 404,
-                    'body': json.dumps({"message": "No subscribed users found"}),
-                    'headers': {'Content-Type': 'application/json'}
-                }
         
-        # 4. Send emails with rate limiting
-        subject = f"Gecko's Birthday - {stories[0].get('title', {}).get('S', 'Newsletter')}"
-        sent_count = send_emails_to_subscribers(subscribers, email_content, subject)
+        # 3. Render the email version
+        email_content = render_email_version(stories, single_recipient)
+
+
+
+        # 4. Construct Subject
+        # fancy algorithm for subject line
+        title_dict = stories[0].get('title', {})
+        title_str = title_dict.get('S', '') if isinstance(title_dict, dict) else str(title_dict)
+        subject_snippet = extract_subject_snippet(title_str, num_words=3)
+        fancy_subject = f"Gecko's Birthday - {subject_snippet}"
+
+        # 5. Send emails
+        sent_count = send_emails_to_subscribers(subscribers, email_content, fancy_subject)
         
         return {
             'statusCode': 200,
@@ -396,7 +462,6 @@ def lambda_handler(event, context):
                 "message": f"Newsletter sent to {sent_count} recipients",
                 "stories_count": len(stories),
                 "recipients_count": len(subscribers),
-                "single_mode": single_recipient is not None
             }),
             'headers': {'Content-Type': 'application/json'}
         }

@@ -1,6 +1,6 @@
 # subscriber_function.py
 #
-# PROCESS SUBSCRIBER REGISTRATION, UNSUBSCRIBE, AND MAÑANA REQUESTS
+# PROCESS SUBSCRIBER REGISTRATION, UNSUBSCRIBE  REQUESTS
 # STORE IN DDB gecko_db
 # RETURN 200 SUCCESS!
 
@@ -25,12 +25,16 @@ TABLE_NAME = os.environ.get('DDB_name')
 # Constants
 ACTION_SUBSCRIBE = 'subscribe'
 ACTION_UNSUBSCRIBE = 'unsubscribe'
-ACTION_MANANA = 'manana'
 
 STATUS_SUBSCRIBED = 'subscribed'
 STATUS_UNSUBSCRIBED = 'unsubscribed'
-STATUS_MANANA = 'manana'
 
+
+
+
+##
+##
+##
 def hash_password(password):
     """Simple password hashing for demonstration purposes.
     In production, use a proper password hashing library."""
@@ -38,6 +42,10 @@ def hash_password(password):
     hashed = hashlib.sha256(salt.encode() + password.encode()).hexdigest()
     return f"{salt}:{hashed}"
 
+
+##
+##
+##
 def process_subscribe(body, email):
     """Process a subscription request"""
     logger.info(f"Processing subscription for: {email}")
@@ -106,6 +114,9 @@ def process_subscribe(body, email):
         'status': STATUS_SUBSCRIBED
     }
 
+##
+##
+##
 def process_unsubscribe(email):
     """Process an unsubscribe request"""
     logger.info(f"Processing unsubscribe for: {email}")
@@ -148,56 +159,11 @@ def process_unsubscribe(email):
         logger.error(f"Error processing unsubscribe: {str(e)}")
         raise e
 
-def process_manana(email):
-    """Process a mañana (one more newsletter) request"""
-    logger.info(f"Processing mañana request for: {email}")
-    
-    # Check if subscriber exists
-    try:
-        existing = dynamodb.get_item(
-            TableName=TABLE_NAME,
-            Key={
-                'pk': {'S': 'user'},
-                'sk': {'S': email}
-            }
-        )
-        
-        if 'Item' not in existing:
-            logger.warning(f"Mañana request for non-existent subscriber: {email}")
-            # Create a new subscriber with mañana status
-            now = datetime.utcnow().isoformat() + 'Z'
-            
-            dynamodb.put_item(
-                TableName=TABLE_NAME,
-                Item={
-                    'pk': {'S': 'user'},
-                    'sk': {'S': email},
-                    'date_created': {'S': now},
-                    'status': {'S': STATUS_MANANA}
-                }
-            )
-        else:
-            # Instead of UpdateItem, use PutItem to update the status
-            # Preserve all existing attributes
-            item = existing['Item']
-            item['status'] = {'S': STATUS_MANANA}
-            item['date_updated'] = {'S': datetime.utcnow().isoformat() + 'Z'}
-            
-            # Save to DynamoDB
-            dynamodb.put_item(TableName=TABLE_NAME, Item=item)
-        
-        logger.info(f"Mañana status set for: {email}")
-        
-        return {
-            'message': 'You will receive one more newsletter',
-            'email': email,
-            'status': STATUS_MANANA
-        }
-        
-    except ClientError as e:
-        logger.error(f"Error processing mañana request: {str(e)}")
-        raise e
 
+
+##
+##
+##
 def lambda_handler(event, context):
     """Main Lambda handler for subscriber management"""
     logger.info("Processing subscriber request")
@@ -244,10 +210,9 @@ def lambda_handler(event, context):
             result = process_subscribe(body, email)
         elif action == ACTION_UNSUBSCRIBE:
             result = process_unsubscribe(email)
-        elif action == ACTION_MANANA:
-            result = process_manana(email)
+       
         else:
-            raise ValueError(f"Invalid action: {action}. Must be one of: {ACTION_SUBSCRIBE}, {ACTION_UNSUBSCRIBE}, {ACTION_MANANA}")
+            raise ValueError(f"Invalid action: {action}. Must be one of: {ACTION_SUBSCRIBE}, {ACTION_UNSUBSCRIBE}")
         
         # Return success response
         return {
@@ -297,4 +262,4 @@ def lambda_handler(event, context):
             }
         }
 
-# EOF
+# EOF subscribe_function.py
