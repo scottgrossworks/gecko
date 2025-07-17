@@ -1,4 +1,3 @@
-
 '''
 ## gecko_preview.py
 ## Handles /preview?email=someone@example.com
@@ -23,14 +22,15 @@ import re
 import os
 import json
 import boto3
+import urllib.parse
 import time
 import logging
 from datetime import datetime
 from botocore.exceptions import ClientError
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 # Initialize AWS clients
 dynamodb = boto3.client('dynamodb')
@@ -38,10 +38,11 @@ ses = boto3.client('ses')
 lambda_client = boto3.client('lambda')
 
 # Environment variables
-TABLE_NAME = os.environ.get('DDB_name', 'gecko_db')
-WEB_LAMBDA = os.environ.get('WEB_LAMBDA', 'gecko_web')
+TABLE_NAME = os.environ.get('DDB_NAME', 'gecko_db')
+WEB_FUNCTION = os.environ.get('WEB_FUNCTION', 'gecko_web')
 RENDER_FUNCTION = os.environ.get('RENDER_FUNCTION', 'gecko_render')
-EMAIL_SOURCE = os.environ.get('EMAIL_SOURCE', 'gecko@scottgross.works')
+EMAIL_SOURCE = os.environ.get('EMAIL_SOURCE')
+EMAIL_TARGET = os.environ.get('EMAIL_TARGET')
 
 
 SUBSCRIBE_BODY = (
@@ -140,14 +141,14 @@ def render_subs( subscription_links ):
 ##
 ## Render the email version of the newsletter
 ##
-def render_email_version( stories, EMAIL_TARGET ):
+def render_email_version( stories, single_recipient ):
 
     # GET STANDARD HEADER HTML SAME FOR ALL VERSIONS
     header_html = getHeaderAscii()
 
      
     mailto_subscribe = (
-        f"mailto:{EMAIL_TARGET}"
+        f"mailto:{single_recipient}"
         f"?subject=Subscribe%20me%20to%20Gecko's%20Birthday"
         f"&body={urllib.parse.quote(SUBSCRIBE_BODY)}"
     )
@@ -217,10 +218,10 @@ Call the gecko_web.py lambda function
 def pass_to_web():
     try:
         payload = {}
-        logger.info(f"Invoking {WEB_LAMBDA} Lambda")
+        logger.info(f"Invoking {WEB_FUNCTION} Lambda")
         
         response = lambda_client.invoke(
-            FunctionName=WEB_LAMBDA,
+            FunctionName=WEB_FUNCTION,
             InvocationType='RequestResponse',
             Payload=json.dumps(payload)
         )

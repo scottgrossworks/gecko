@@ -18,8 +18,8 @@ from datetime import datetime
 from botocore.exceptions import ClientError
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 # Initialize AWS clients
 dynamodb = boto3.client('dynamodb')
@@ -35,7 +35,7 @@ GSI_NAME = os.environ.get('GSI', 'status-index')  # GSI name for querying subscr
 BATCH_SIZE = int(os.environ.get('BATCH_SIZE', '10'))  # Number of emails before sleep
 SLEEP_TIME = float(os.environ.get('SLEEP_TIME', '1.0'))  # Sleep time in seconds
 
-EMAIL_SOURCE = os.environ.get('EMAIL_SOURCE', 'gecko@scottgross.works')
+EMAIL_TARGET = os.environ.get('EMAIL_TARGET') # for subscribe button
 
 UNSUBSCRIBE_BODY = (
     "Maybe it's a mistake, but I need a break from the flow of news and insights. "
@@ -189,7 +189,7 @@ def get_and_update_stories(count=3):
 ##
 ## Render the email version of the newsletter
 ##
-def render_email_version( stories, EMAIL_TARGET ):
+def render_email_version( stories ):
 
     # GET STANDARD HEADER HTML SAME FOR ALL VERSIONS
     header_html = getHeaderAscii()
@@ -350,7 +350,13 @@ def send_emails_to_subscribers(subscribers, email_content, subject):
 
     sent_count = 0
     error_count = 0
+
+    if not EMAIL_TARGET:
+        logger.error("EMAIL_TARGET environment variable is not set")
+        return 0
     
+
+
     for subscriber in subscribers:
         try:
             # Get subscriber email
@@ -364,7 +370,7 @@ def send_emails_to_subscribers(subscribers, email_content, subject):
             
             # Send email via SES
             ses.send_email(
-                Source=EMAIL_SOURCE,
+                Source=EMAIL_TARGET,
                 Destination={'ToAddresses': [email]},
                 Message={
                     'Subject': {'Data': subject},
@@ -393,7 +399,7 @@ def send_emails_to_subscribers(subscribers, email_content, subject):
                 # Retry sending this email
                 try:
                     ses.send_email(
-                        Source=EMAIL_SOURCE,
+                        Source=EMAIL_TARGET,
                         Destination={'ToAddresses': [email]},
                         Message={
                             'Subject': {'Data': subject},
@@ -442,7 +448,7 @@ def lambda_handler(event, context):
         
         
         # 3. Render the email version
-        email_content = render_email_version(stories, single_recipient)
+        email_content = render_email_version(stories)
 
 
 

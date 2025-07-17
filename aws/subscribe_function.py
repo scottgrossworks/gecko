@@ -13,14 +13,17 @@ import os
 import uuid
 import hashlib
 # import base64
+import re
+
+
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 # Initialize AWS clients
 dynamodb = boto3.client('dynamodb')
-TABLE_NAME = os.environ.get('DDB_name')
+TABLE_NAME = os.environ.get('DDB_NAME')
 
 # Constants
 ACTION_SUBSCRIBE = 'subscribe'
@@ -29,7 +32,7 @@ ACTION_UNSUBSCRIBE = 'unsubscribe'
 STATUS_SUBSCRIBED = 'subscribed'
 STATUS_UNSUBSCRIBED = 'unsubscribed'
 
-
+EMAIL_REGEX = r"^[\w\.-]+@[\w\.-]+\.\w+$"
 
 
 ##
@@ -85,6 +88,10 @@ def process_subscribe(body, email):
     
     # Check if subscriber already exists
     try:
+        # Validate environment
+        if not TABLE_NAME:
+            raise ValueError("DDB_NAME environment variable is not set")
+
         existing = dynamodb.get_item(
             TableName=TABLE_NAME,
             Key={
@@ -163,103 +170,79 @@ def process_unsubscribe(email):
 
 ##
 ##
-##
+  
 def lambda_handler(event, context):
-    """Main Lambda handler for subscriber management"""
-    logger.info("Processing subscriber request")
-    logger.info(f"Event received: {json.dumps(event)}")
-    
     try:
-        # Validate environment
-        if not TABLE_NAME:
-            raise ValueError("DDB_name environment variable is not set")
-        
-        # Parse request body
-        if isinstance(event, dict) and 'body' not in event:
-            # Direct testing with a simple JSON object
-            body = event
-            logger.info("Using event directly as body")
-        elif isinstance(event, dict) and 'body' in event:
-            # API Gateway format
-            logger.info("Parsing body from API Gateway event")
-            try:
-                body = json.loads(event['body']) if isinstance(event['body'], str) else event['body']
-            except json.JSONDecodeError:
-                logger.error(f"Invalid JSON in request body: {event['body']}")
-                raise ValueError("Invalid JSON in request body")
-        else:
-            logger.error(f"Unrecognized event format: {json.dumps(event)}")
-            raise ValueError("Missing request body")
-        
-        # Validate required fields
-        if 'email' not in body:
+        logger.info(f"Subscriber Event received: {json.dumps(event)}")
+
+        # Extract params (API Gateway GET or direct test)
+        params = event.get('queryStringParameters', {}) or {}
+
+        # EMAIL
+        if 'email' not in params:
             raise ValueError("Email is required")
-        
-        email = body['email'].strip().lower()
+        email = params['email'].strip().lower()
         if not email:
             raise ValueError("Email cannot be empty")
-        
-        ###
-        ### Process based on action
-        ### (default to subscribe)
-        ###
-        
-        action = body.get('action', ACTION_SUBSCRIBE).lower()
+        if not re.match(EMAIL_REGEX, email):
+            raise ValueError("Invalid email format")
 
+        # ACTION
+        action = params.get('action', ACTION_SUBSCRIBE).lower()
+
+        # TAGS/INTERESTS (future-proof)
+        interests = params.get('interests')
+        if interests is None:
+            tags = []
+        elif isinstance(interests, list):
+            tags = interests
+        elif isinstance(interests, str):
+            # Support comma-separated string for web/query param
+            tags = [t.strip() for t in interests.split(",") if t.strip()]
+        else:
+            tags = []
+
+        # Add tags to params for downstream processing
+        params['tags'] = tags
+
+        # DISPATCH
         if action == ACTION_SUBSCRIBE:
-            result = process_subscribe(body, email)
+            result = process_subscribe(params, email)
         elif action == ACTION_UNSUBSCRIBE:
             result = process_unsubscribe(email)
-       
         else:
             raise ValueError(f"Invalid action: {action}. Must be one of: {ACTION_SUBSCRIBE}, {ACTION_UNSUBSCRIBE}")
-        
-        # Return success response
+
+        # RESPONSE
         return {
             'statusCode': 200,
             'body': json.dumps(result),
             'headers': {
+                'Access-Control-Allow-Origin': '*',
                 'Content-Type': 'application/json'
             }
         }
-        
+
     except ValueError as e:
         error_msg = f"Validation Error: {str(e)}"
         logger.error(error_msg)
         return {
             'statusCode': 400,
-            'body': json.dumps({
-                'message': error_msg
-            }),
+            'body': json.dumps({'error': error_msg}),
             'headers': {
+                'Access-Control-Allow-Origin': '*',
                 'Content-Type': 'application/json'
             }
         }
-        
-    except ClientError as e:
-        error_msg = f"AWS Error: {str(e)}"
-        logger.error(error_msg)
-        return {
-            'statusCode': 500,
-            'body': json.dumps({
-                'message': error_msg
-            }),
-            'headers': {
-                'Content-Type': 'application/json'
-            }
-        }
-        
     except Exception as e:
-        error_msg = f"Unexpected Error: {str(e)}"
+        error_msg = f"Unexpected error: {str(e)}"
         logger.error(error_msg)
         return {
             'statusCode': 500,
-            'body': json.dumps({
-                'message': error_msg
-            }),
+            'body': json.dumps({'error': error_msg}),
             'headers': {
+                'Access-Control-Allow-Origin': '*',
                 'Content-Type': 'application/json'
             }
         }
-
 # EOF subscribe_function.py

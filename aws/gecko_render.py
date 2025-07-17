@@ -9,12 +9,12 @@ import re
 import logging
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 # Initialize AWS clients
 dynamodb = boto3.client('dynamodb')
-TABLE_NAME = os.environ.get('DDB_name')
+TABLE_NAME = os.environ.get('DDB_NAME')
 
 
 
@@ -90,15 +90,15 @@ def render_stories( stories ):
         # combine fields into story block HTML content
         #
         
-        story_start = "<table width='100%' border='0' cellspacing='0' cellpadding='10' bgcolor='#000000' style='color:#FFFFFF;margin-bottom: 20px;'><tr><td bgcolor='#000000'>"
+        story_start = "<table width='100%' border='0' cellspacing='0' cellpadding='10' bgcolor='black' style='color:white;margin-bottom: 20px;'><tr><td bgcolor='black'>"
 
         # Split title from rest with a true break
         # Put category first, then title, then smaller URL
-        story_content  = f"<div style='color: red; font-style: italic; font-size: 14px; margin-bottom: 6px;'><i>{category}</i></div>"
-        story_content += f"<h2 style='color: #FFFFFF; margin: 0 0 4px 0;'>{title}</h2>"
+        story_content  = f"<div style='color: red; font-style: italic; font-size: 15px; margin-bottom: 6px;'><i>{category}</i></div>"
+        story_content += f"<h2 style='color: white; margin: 0 0 4px 0;'>{title}</h2>"
         story_content += f"<div style='line-height: 1.2; font-size: 13px; margin: 0 0 14px 0;'>{href}</div>"
         story_content += f"<div style='line-height:1.4; margin-bottom: 8px;'><b style='color:chartreuse'>Story</b>:&nbsp;&nbsp;{summary}</div>"
-        story_content += f"<div style='line-height:1.4; margin-bottom: 2px;'><b style='color:chartreuse'>Gecko's Take</b>:&nbsp;&nbsp;{take}</div>"
+        story_content += f"<div style='line-height:1.4; margin-bottom: 2px;'><b style='color:chartreuse;letter-spacing:1.25px;'>Gecko's Take</b>:&nbsp;&nbsp;{take}</div>"
 
         story_end = "</i></p></td></tr></table>"
         stories_html += f"{story_start}{story_content}{story_end}"
