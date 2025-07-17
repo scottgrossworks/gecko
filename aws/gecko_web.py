@@ -99,16 +99,16 @@ def render_links( subscription_link ):
 
     #formatted_date = format_date()
     
-    library_link = f"<a href='{LIBRARY_LINK}' target='_blank' style='color: gold; font-weight: bold; text-decoration: none; font-size: 1em;'>MBA Library</a>"
-    faq_link = f"<a href='{FAQ_LINK}' target='_blank' style='color: gold; font-weight: bold; text-decoration: none; font-size: 1em;'>FAQ</a>"
+    library_link = f"<a href='{LIBRARY_LINK}' target='_blank' style='color: gold; font-weight: bold; text-decoration: none; font-size: 1em;'>MBA Links</a>"
+    faq_link = f"<a href='{FAQ_LINK}' target='_blank' style='color: white; font-weight: bold; text-decoration: none; font-size: 1em;'>FAQ</a>"
 
     header_html = "" 
     header_html += f"""
     <tr>
-    <td style='color: white; padding-top: 12px; letter-spacing: 1.1px;'>
+    <td style='padding-top: 12px; letter-spacing: 1.1px;'>
         <div style='display: flex; justify-content: space-between; align-items: center;'>
-        <span><font style='color:gold; font-weight:600'>{library_link}</font></span>
-        <span><font style='color:gold; font-weight:600'>{faq_link}</font></span>
+        <span>{library_link}</span>
+        <span>{faq_link}</span>
         <span style='text-align: right;'>{subscription_link}</span>
         </div>
     </td>
@@ -181,7 +181,7 @@ def render_web_version( stories ):
 
     ## COMPOSE THE COMPLETE HTML
     ##
-    top_html = f"<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Gecko's Birthday Today</title><style>body,html{{background-color:black;color:white;margin:0;padding:0;font-family:'Tahoma',monospace;}}</style></head>"
+    top_html = f"<!DOCTYPE html><html><head><meta charset='UTF-8'><title>GEKKO</title><style>body,html{{background-color:black;color:white;margin:0;padding:0;font-family:'Tahoma',monospace;}}</style></head>"
     
     body_html = f"<body bgcolor='black' text='white' link='white' alink='white' style='background-color:black;color:white;margin:0;padding:0;font-family:'Verdana',monospace;'><BR><BR> \
     <table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black'><tr><td align='center'><table width='600' border='1' cellspacing='0' cellpadding='20' bordercolor='white' bgcolor='black' style='border:1px solid white;'> \

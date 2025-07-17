@@ -98,7 +98,7 @@ def render_stories( stories ):
         story_content += f"<h2 style='color: white; margin: 0 0 4px 0;'>{title}</h2>"
         story_content += f"<div style='line-height: 1.2; font-size: 13px; margin: 0 0 14px 0;'>{href}</div>"
         story_content += f"<div style='line-height:1.4; margin-bottom: 8px;'><b style='color:chartreuse'>Story</b>:&nbsp;&nbsp;{summary}</div>"
-        story_content += f"<div style='line-height:1.4; margin-bottom: 2px;'><b style='color:chartreuse;letter-spacing:1.25px;'>Gecko's Take</b>:&nbsp;&nbsp;{take}</div>"
+        story_content += f"<div style='line-height:1.4; margin-bottom: 2px;'><b style='color:chartreuse;letter-spacing:1.25px;'>Gekko's Take</b>:&nbsp;&nbsp;{take}</div>"
 
         story_end = "</i></p></td></tr></table>"
         stories_html += f"{story_start}{story_content}{story_end}"

@@ -37,6 +37,11 @@ SLEEP_TIME = float(os.environ.get('SLEEP_TIME', '1.0'))  # Sleep time in seconds
 
 EMAIL_TARGET = os.environ.get('EMAIL_TARGET') # for subscribe button
 
+LIBRARY_LINK = os.environ.get('LIBRARY_LINK')
+FAQ_LINK = os.environ.get('FAQ_LINK')
+
+
+
 UNSUBSCRIBE_BODY = (
     "Maybe it's a mistake, but I need a break from the flow of news and insights. "
     "Like Gordon Gekko at the end of Wall Street, I’m stepping away — for now. "
