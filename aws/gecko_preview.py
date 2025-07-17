@@ -49,16 +49,18 @@ WEB_FUNCTION = os.environ.get('WEB_FUNCTION', 'gecko_web')
 RENDER_FUNCTION = os.environ.get('RENDER_FUNCTION', 'gecko_render')
 EMAIL_SOURCE = os.environ.get('EMAIL_SOURCE')
 EMAIL_TARGET = os.environ.get('EMAIL_TARGET')
+EMAIL_SUBJECT = os.environ.get('EMAIL_SUBJECT', "Gekko's Birthday * Preview Newsletter")
+
 
 LIBRARY_LINK = os.environ.get('LIBRARY_LINK')
 FAQ_LINK = os.environ.get('FAQ_LINK')
 
-WIDTH = 500
+WIDTH = "'100%'"
 
 SUBSCRIBE_BODY = (
     "I want news and insights at the intersection of business, technology, and culture. "
     "Like Bud Fox in Wall Street, I want to start my day with the information and opportunities that can change my life. "
-    "Sign me up for Gecko's Birthday and let's get started!"
+    "Sign me up for the Gekko's Birthday Newsletter!"
     )
 
 
@@ -86,15 +88,15 @@ def getHeaderAscii():
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:black;">
   <tr>
     <td align="center" style="padding-bottom:10px;">
-      <table width={WIDTH} cellpadding="0" cellspacing="0" style="border:2px solid white; background:black;">
+      <table width={WIDTH} cellpadding="6px" cellspacing="0" style="border:2px solid white; background:black;">
         <tr>
           <td style="padding: 12px 0 4px 0;"><center>
             <table width="90%" cellpadding="0" cellspacing="0" border="0">
               <tr>
-                <td align="left" style="color: chartreuse; font-size: 1.2em; font-weight: bold; letter-spacing: 2px; font-family: Tahoma, Geneva, Verdana, sans-serif;">
+                <td align="left" style="color: chartreuse; font-size: 1.2em; font-weight: bold; letter-spacing: 1.5px; font-family: Tahoma, Geneva, Verdana, sans-serif;">
                   GOOD MORNING
                 </td>
-                <td align="right" style="color: chartreuse; font-size: 1.2em; font-weight: bold; letter-spacing: 2px; font-family: Tahoma, Geneva, Verdana, sans-serif;">
+                <td align="right" style="color: chartreuse; font-size: 1.2em; font-weight: bold; letter-spacing: 1.5px; font-family: Tahoma, Geneva, Verdana, sans-serif;">
                   {time_str}
                 </td>
               </tr>
@@ -102,7 +104,7 @@ def getHeaderAscii():
           </td>
         </tr>
         <tr>
-          <td style="text-align: center; color: white; font-size: 1em; font-weight:600; padding: 10px 0 5px 0; letter-spacing: 1.3px; font-family: Tahoma, Geneva, Verdana, sans-serif;">
+          <td style="text-align: center; color: white; font-size: 1em; font-weight:600; padding: 10px 0 4px 0; letter-spacing: 1.1px; font-family: Tahoma, Geneva, Verdana, sans-serif;">
             {date_str}
           </td>
         </tr>
@@ -155,16 +157,20 @@ def render_links( subscription_link ):
 ##
 ## Render the email version of the newsletter
 ##
-def render_email_version( stories, single_recipient ):
+def render_email_version( stories, gecko_subscribe ):
 
     # GET STANDARD HEADER HTML SAME FOR ALL VERSIONS
     header_html = getHeaderAscii()
 
      
+    # Properly encode the body for mailto link
+    body_text = SUBSCRIBE_BODY.replace('\n', ' ').replace('"', '%22')  # Replace newlines with spaces and escape quotes
+    body_encoded = urllib.parse.quote(body_text, safe='')  # Encode everything
+    
     mailto_subscribe = (
-        f"<a style='color:chartreuse;text-decoration:none;font-weight:600;' href='mailto:{single_recipient}"
-        f"?subject=Subscribe%20me%20to%20Gecko's%20Birthday"
-        f"&body={urllib.parse.quote(SUBSCRIBE_BODY)}>Subscribe</a>"
+        f"<a style='color:chartreuse;font-weight:600;' href='mailto:{gecko_subscribe}"
+        f"?subject={urllib.parse.quote('Subscribe to Gekko\'s Birthday')}"
+        f"&body={body_encoded}'>Subscribe</a>"
     )
 
     sub_html = render_links( mailto_subscribe )
@@ -183,10 +189,10 @@ def render_email_version( stories, single_recipient ):
     top_html = f"<!DOCTYPE html><html><head><meta charset='UTF-8'><title>GEKKO'S BIRTHDAY</title><style>body,html{{background-color:black;color:white;margin:0;padding:0;font-family:'Tahoma',monospace;}}</style></head>"
     
     body_html = f"<body bgcolor='black' text='white' link='white' alink='white' style='background-color:black;color:white;margin:0;padding:0;font-family:'Verdana',monospace;'><BR><BR> \
-    <table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black'><tr><td align='center'><table width='600' border='1' cellspacing='0' cellpadding='20' bordercolor='white' bgcolor='black' style='border:1px solid white;'> \
+    <table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black'><tr><td align='center'><table width='600' border='0' cellspacing='0' cellpadding='20' bgcolor='black'> \
     <tr><td bgcolor='black'><table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black' style='font-family:'Tahoma',monospace;'>{header_html}</table><BR><font style='font-family:Helvetica, sans-serif; letter-spacing:1.25px;'>{stories_html}</font>"
     
-    footer_html = f"<hr color='white' size='1' style='border:none;border-top:1px solid white;margin:20px 0;'><div align='center' style='color:chartreuse;font-size:12px;text-align:center;margin-top:30px;'>&copy; {datetime.now().year} GEKKO'S BIRTHDAY Newsletter. All rights reserved.<BR>{mailto_subscribe}<BR></div></td></tr></table></td></tr></table><BR></body></html>"
+    footer_html = f"<hr color='white' size='1' style='border:none;border-top:1px solid white;margin:20px 0;'><div align='center' style='color:chartreuse;font-size:12px;text-align:center;margin-top:20px;'>&copy; {datetime.now().year} GEKKO'S BIRTHDAY Newsletter, produced by Scott Gross. All rights reserved.<BR>{mailto_subscribe}<BR></div></td></tr></table></td></tr></table><BR></body></html>"
     
     final_html = top_html + body_html + footer_html
     
@@ -385,7 +391,7 @@ def lambda_handler(event, context):
         single_recipient = None
         if isinstance(event, dict) and 'email' in event.get('queryStringParameters', {}):
             single_recipient = event['queryStringParameters']['email']
-            logger.info(f"Single recipient mode for: {single_recipient}")
+            logger.info(f"Sending preview to: {single_recipient}")
         
         else:
             # ERROR CONDITION
@@ -396,7 +402,6 @@ def lambda_handler(event, context):
                 'headers': {'Content-Type': 'application/json'}
             }
 
-        # single_recipient contains target email_address 
         # 1. Get top stories and update their status (only update if not view-only)
         stories = get_stories_without_update(count=3)
         
@@ -409,14 +414,12 @@ def lambda_handler(event, context):
         
 
         # 2. Render the email version
-        email_content = render_email_version(stories, single_recipient)
+        # EMAIL_TARGET is the gecko_subscribe email address
+        email_content = render_email_version(stories, EMAIL_TARGET)
 
 
-        # 3. Construct Subject
-        subject = "Gecko's Birthday- Preview Newsletter"
-
-        # 4. Send email
-        send_single_email(single_recipient, email_content, subject)
+        # 3. Send email
+        send_single_email(single_recipient, email_content, EMAIL_SUBJECT)
 
        
         

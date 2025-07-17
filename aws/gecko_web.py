@@ -171,7 +171,7 @@ def render_web_version( stories ):
     # Get the header HTML
     header_html = getHeaderAscii()
 
-    web_link = f"<a href='{WEB_TARGET}' style='font-weight:600;text-decoration: none;'><font color='chartreuse'>Subscribe</font></a>"
+    web_link = f"<a href='{WEB_TARGET}' style='font-weight:600;'><font color='chartreuse'>Subscribe</font></a>"
 
     sub_html = render_links( web_link )
 
@@ -187,7 +187,7 @@ def render_web_version( stories ):
     <table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black'><tr><td align='center'><table width='600' border='1' cellspacing='0' cellpadding='20' bordercolor='white' bgcolor='black' style='border:1px solid white;'> \
     <tr><td bgcolor='black'><table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black' style='font-family:'Tahoma',monospace;'>{header_html}</table><BR><font style='font-family:Helvetica, sans-serif; letter-spacing:1.25px;'>{stories_html}</font>"
     
-    footer_html = f"<hr color='white' size='1' style='border:none;border-top:1px solid white;margin:20px 0;'><div align='center' style='color:chartreuse;font-size:12px;text-align:center;margin-top:30px;'>&copy; {datetime.now().year} GEKKO'S BIRTHDAY Newsletter. All rights reserved.<BR><BR>{web_link}<BR></div></td></tr></table></td></tr></table><BR></body></html>"
+    footer_html = f"<hr color='white' size='1' style='border:none;border-top:1px solid white;margin:20px 0;'><div align='center' style='color:chartreuse;font-size:12px;text-align:center;margin-top:30px;'>&copy; {datetime.now().year} GEKKO'S BIRTHDAY Newsletter, produced by Scott Gross. All rights reserved.<BR><BR>{web_link}<BR></div></td></tr></table></td></tr></table><BR></body></html>"
     
     final_html = top_html + body_html + footer_html
     
