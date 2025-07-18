@@ -12,10 +12,19 @@ No preview, no web rendering, no single-email outreach
 import os
 import json
 import boto3
+import urllib.parse
 import time
 import logging
 from datetime import datetime
+try:
+    from zoneinfo import ZoneInfo  # Python 3.9+
+except ImportError:
+    from backports.zoneinfo import ZoneInfo  # For local dev if needed
+
 from botocore.exceptions import ClientError
+
+
+
 
 # Configure logging
 logger = logging.getLogger()
@@ -35,12 +44,14 @@ GSI_NAME = os.environ.get('GSI', 'status-index')  # GSI name for querying subscr
 BATCH_SIZE = int(os.environ.get('BATCH_SIZE', '10'))  # Number of emails before sleep
 SLEEP_TIME = float(os.environ.get('SLEEP_TIME', '1.0'))  # Sleep time in seconds
 
-EMAIL_TARGET = os.environ.get('EMAIL_TARGET') # for subscribe button
+EMAIL_SOURCE = os.environ.get('EMAIL_SOURCE')
+EMAIL_TARGET = os.environ.get('EMAIL_TARGET')
+EMAIL_SUBJECT = os.environ.get('EMAIL_SUBJECT', "Gekko's Birthday * Newsletter")
 
 LIBRARY_LINK = os.environ.get('LIBRARY_LINK')
 FAQ_LINK = os.environ.get('FAQ_LINK')
 
-
+WIDTH = "'100%'"
 
 UNSUBSCRIBE_BODY = (
     "Maybe it's a mistake, but I need a break from the flow of news and insights. "
@@ -63,72 +74,77 @@ def format_date():
 ##
 ## Helper function -- return the ASCII header
 ##
+
+
 def getHeaderAscii():
- # Create the header HTML directly with proper colors and spacing
-    header_html = ""
-    
-    # Top border - chartreuse green
-    header_html += "<tr style='padding-left:20px;'>"
-    header_html += "<td style='color: chartreuse;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-    header_html += "╔════════════════════════════════════════════╗</td></tr>"
-    
-    # GECKO'S BIRTHDAY line - with red asterisk
-    header_html += "<tr style='padding-left:20px;'><td>"
-    header_html += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-    header_html += "<span style='color: chartreuse;'>{&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-    header_html += "<font color='red' style='font-weight:600;letter-spacing:0.1em;'>GECKO'S BIRTHDAY</font></span>"
-    header_html += "<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>"
-    header_html += "<span style='color: red;'>*</span>"
-    header_html += "<span style='color: chartreuse;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.<font style='letter-spacing:0.1em;'>&nbsp;&nbsp;║</font></span>"
-    header_html += "</td></tr>"
-    
-    # News • Markets • AI line - with white text and carets
-    header_html += "<tr style='padding-left:20px;'><td>"
-    header_html += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-    header_html += "<span style='color: chartreuse;'>{&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>"
-    header_html += "<span style='color: #FFFFFF;'>News • Markets • Ai</span>"
-    header_html += "<span style='color: #FFFFFF;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>"
-    header_html += "<span style='color: #FFFFFF;'>^^^^^^^^^</span>"
-    header_html += "<span style='color: chartreuse;'>══╝</span>"
-    header_html += "</td></tr>"
-    
-    # By Scott Gross line - with white carets and red dashes
-    header_html += "<tr style='padding-left:20px;'><td>"
-    header_html += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-    header_html += "<span style='color: chartreuse;'>{&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;By Scott Gross</span>"
-    header_html += "<span style='color: chartreuse;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>"
-    header_html += "<span style='color: #FFFFFF;'>^^</span>"
-    header_html += "<span style='color: red;'>----</span>"
-    header_html += "<span style='color: #FFFFFF;'>^^^</span>"
-    header_html += "<span style='color: chartreuse;'>══╗</span>"
-    header_html += "</td></tr>"
-    
-    # Bottom border - chartreuse green
-    header_html += "<tr style='padding-left:20px'>"
-    header_html += "<td style='color: chartreuse;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-    header_html += "╚════════════════════════════════════════════╝</td></tr>"
-
-    return header_html
-
-
-##
-##
-##
-def render_subs( subscription_links ):
-
-    formatted_date = format_date()
-    header_html = "" 
-    header_html += f"""
-    <tr>
-    <td style='color: white; padding-top: 10px;'>
-        <div style='display: flex; justify-content: space-between; align-items: center;'>
-        <span><font style='color:gold; font-weight:600'>{formatted_date}</font></span>
-        <span style='text-align: right;'>{subscription_links}</span>
-        </div>
+    now = datetime.now(ZoneInfo("America/Los_Angeles"))
+    time_str = now.strftime("%-I:%M %p").upper()
+    date_str = now.strftime("%B %d, %Y - %A").upper()
+    header_html = f"""
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:black;">
+  <tr>
+    <td align="center" style="padding-bottom:10px;">
+      <table width={WIDTH} cellpadding="6px" cellspacing="0" style="border:2px solid white; background:black;">
+        <tr>
+          <td style="padding: 12px 0 4px 0;"><center>
+            <table width="90%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td align="left" style="color: chartreuse; font-size: 1.2em; font-weight: bold; letter-spacing: 1.5px; font-family: Tahoma, Geneva, Verdana, sans-serif;">
+                  GOOD MORNING!
+                </td>
+                <td align="right" style="color: chartreuse; font-size: 1.2em; font-weight: bold; letter-spacing: 1.5px; font-family: Tahoma, Geneva, Verdana, sans-serif;">
+                  {time_str}
+                </td>
+              </tr>
+            </table></center>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center; color: white; font-size: 1em; font-weight:600; padding: 10px 0 4px 0; letter-spacing: 1.1px; font-family: Tahoma, Geneva, Verdana, sans-serif;">
+            {date_str}
+          </td>
+        </tr>
+        <tr>
+          <td align="center" style="padding: 12px 0 20px 0;">
+            <span style="display: inline-block; border: 2px solid white; color: coral; background: black; font-size: 1.7em; font-weight: bold; border-radius: 5px; padding: 8px 20px; letter-spacing: 2px; font-family: Tahoma, Geneva, Verdana, sans-serif;">
+              GEKKO'S BIRTHDAY
+            </span>
+          </td>
+        </tr>
+      </table>
     </td>
-    </tr>
-    """
+  </tr>
+</table>
+"""
     return header_html
+
+
+
+##
+##
+##
+def render_links( subscription_link ):
+
+    #formatted_date = format_date()
+    
+    library_link = f"<a href='{LIBRARY_LINK}' target='_blank' style='color: gold; font-weight: bold; text-decoration: none; font-size: 1em;'>MBA Links</a>"
+    faq_link = f"<a href='{FAQ_LINK}' target='_blank' style='color: white; font-weight: bold; text-decoration: none; font-size: 1em;'>FAQ</a>"
+
+    header_html = f"""
+<tr>
+  <td style='letter-spacing: 1.1px;'><center>
+    <table width="{WIDTH}" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td align="left" style="padding: 0 20px;">{library_link}</td>
+        <td align="center" style="padding: 0 20px;">{faq_link}</td>
+        <td align="right" style="padding: 0 20px;">{subscription_link}</td>
+      </tr>
+    </table></center>
+  </td>
+</tr>
+"""
+    return header_html
+
 
 
 
@@ -194,23 +210,27 @@ def get_and_update_stories(count=3):
 ##
 ## Render the email version of the newsletter
 ##
-def render_email_version( stories ):
+def render_email_version( stories, gecko_unsub ):
 
     # GET STANDARD HEADER HTML SAME FOR ALL VERSIONS
     header_html = getHeaderAscii()
 
      
-    mailto_subscribe = (
-        f"mailto:{EMAIL_TARGET}"
-        f"?subject=Subscribe%20me%20to%20Gecko's%20Birthday"
-        f"&body={urllib.parse.quote(SUBSCRIBE_BODY)}"
+    # Properly encode the body for mailto link
+    body_text = UNSUBSCRIBE_BODY.replace('\n', ' ').replace('"', '%22')  # Replace newlines with spaces and escape quotes
+    body_encoded = urllib.parse.quote(body_text, safe='')  # Encode everything
+    
+    mailto_unsub = (
+        f"<a style='color:chartreuse;font-weight:600;' href='mailto:{gecko_unsub}"
+        f"?subject={urllib.parse.quote('Unsubscribe from Gekko\'s Birthday')}"
+        f"&body={body_encoded}'>Unsubscribe</a>"
     )
 
-    sub_html = render_subs( mailto_subscribe )
+    sub_html = render_links( mailto_unsub )
 
     header_html += sub_html
 
-    footer_html = f"<br><a href='{mailto_subscribe}' style='color:red;text-decoration:none;'>Subscribe</a>"
+    footer_html = f"<br>{mailto_unsub}"
 
 
     # RENDER THE STORIES AS HTML STRING
@@ -219,10 +239,17 @@ def render_email_version( stories ):
 
     ## COMPOSE THE COMPLETE HTML
     ##
-    email_html = f"""<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Gecko's Birthday Today</title><style>body,html{{background-color:#000000;color:#FFFFFF;margin:0;padding:0;font-family:'Courier New',monospace;}}</style></head><body bgcolor='#000000' text='white' link='white' alink='white' style='background-color:black;color:white;margin:0;padding:0;font-family:"Courier New",monospace;'><BR><BR><table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black'><tr><td align='center'><table width='600' border='1' cellspacing='0' cellpadding='20' bordercolor='white' bgcolor='black' style='border:1px solid white;'><tr><td bgcolor='black'><table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black' style='font-family:"Courier New",monospace;'>{header_html}</table><hr color='white' size='1' style='border:none;border-top:1px solid white;margin:20px 0;'>{stories_html}<hr color='white' size='1' style='border:none;border-top:1px solid white;margin:20px 0;'><div align='center' style='color:chartreuse;font-size:12px;text-align:center;margin-top:30px;'>&copy; {datetime.now().year} GECKO'S BIRTHDAY Newsletter. All rights reserved.{footer_html}</div></td></tr></table></td></tr></table></body></html>"""
-
-
-    return email_html
+    top_html = f"<!DOCTYPE html><html><head><meta charset='UTF-8'><title>GEKKO'S BIRTHDAY</title><style>body,html{{background-color:black;color:white;margin:0;padding:0;font-family:'Tahoma',monospace;}}</style></head>"
+    
+    body_html = f"<body bgcolor='black' text='white' link='white' alink='white' style='background-color:black;color:white;margin:0;padding:0;font-family:'Verdana',monospace;'><BR><BR> \
+    <table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black'><tr><td align='center'><table width='600' border='0' cellspacing='0' cellpadding='20' bgcolor='black'> \
+    <tr><td bgcolor='black'><table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black' style='font-family:'Tahoma',monospace;'>{header_html}</table><BR><font style='font-family:Helvetica, sans-serif; letter-spacing:1.25px;'>{stories_html}</font>"
+    
+    footer_html = f"<hr color='white' size='1' style='border:none;border-top:1px solid white;margin:20px 0;'><div align='center' style='color:chartreuse;font-size:12px;text-align:center;margin-top:20px;'>&copy; {datetime.now().year} GEKKO'S BIRTHDAY Newsletter, produced by Scott Gross. All rights reserved.<BR>{mailto_subscribe}<BR></div></td></tr></table></td></tr></table><BR></body></html>"
+    
+    final_html = top_html + body_html + footer_html
+    
+    return final_html
 
 
 
@@ -332,9 +359,9 @@ def extract_subject_snippet(title, num_words=3):
     # List of common stopwords to skip at the beginning
     stopwords = {'the', 'a', 'an', 'this', 'that', 'these', 'those'}
     # Skip leading stopwords
-    filtered = [w for w in words if w.lower() not in stopwords or words.index(w) > 0]
+    filtecoral = [w for w in words if w.lower() not in stopwords or words.index(w) > 0]
     # Take the first num_words after skipping stopwords
-    snippet = " ".join(filtered[:num_words])
+    snippet = " ".join(filtecoral[:num_words])
     return snippet if snippet else "Newsletter"
 
 

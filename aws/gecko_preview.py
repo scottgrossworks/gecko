@@ -59,8 +59,8 @@ WIDTH = "'100%'"
 
 SUBSCRIBE_BODY = (
     "I want news and insights at the intersection of business, technology, and culture. "
-    "Like Bud Fox in Wall Street, I want to start my day with the information and opportunities that can change my life. "
-    "Sign me up for the Gekko's Birthday Newsletter!"
+    "Like Bud Fox in Wall Street, start my day with the information that can change my life. "
+    "<b>Sign me up</b> for the Gekko's Birthday Newsletter!"
     )
 
 
@@ -94,7 +94,7 @@ def getHeaderAscii():
             <table width="90%" cellpadding="0" cellspacing="0" border="0">
               <tr>
                 <td align="left" style="color: chartreuse; font-size: 1.2em; font-weight: bold; letter-spacing: 1.5px; font-family: Tahoma, Geneva, Verdana, sans-serif;">
-                  GOOD MORNING
+                  GOOD MORNING!
                 </td>
                 <td align="right" style="color: chartreuse; font-size: 1.2em; font-weight: bold; letter-spacing: 1.5px; font-family: Tahoma, Geneva, Verdana, sans-serif;">
                   {time_str}

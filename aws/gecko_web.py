@@ -69,8 +69,8 @@ def getHeaderAscii():
       <tr>
         <td style="padding: 2px 0 4px 0;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="color: chartreuse; font-size: 1.3em; font-weight: bold; letter-spacing: 2px;">GOOD MORNING</span>
-            <span style="color: chartreuse; font-size: 1.3em; font-weight: bold; letter-spacing: 2px;">{time_str} PST</span>
+            <span style="color: chartreuse; font-size: 1.3em; font-weight: bold; letter-spacing: 2px;">GOOD MORNING!</span>
+            <span style="color: chartreuse; font-size: 1.3em; font-weight: bold; letter-spacing: 2px;">{time_str}</span>
           </div>
         </td>
       </tr>
