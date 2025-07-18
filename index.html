@@ -125,5 +125,34 @@
     The use of Bud Fox, Wall Street, Charlie Sheen, Gordon Gekko, and Michael Douglas is governed by Fair Use and is for reference and commentary purposes only. No copyright ownership of these works is implied or claimed, and no money is being made here.
   </footer>
 
+
+
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('subscribe-form');
+      const button = document.getElementById('subscribe-btn');
+      if (!form || !button) return;
+    
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData).toString();
+        button.disabled = true;
+        fetch('https://unha4lumv1.execute-api.us-west-2.amazonaws.com/prod/preview?' + params)
+          .then(res => res.ok ? res.json() : Promise.reject())
+          .then(data => {
+            button.style.background = 'chartreuse';
+            button.style.color = 'white';
+            button.textContent = 'Subscribed!';
+          })
+          .catch(() => {
+            button.disabled = false;
+            button.textContent = 'Try Again';
+          });
+      });
+    });
+    </script>
+    
 </body>
 </html>
