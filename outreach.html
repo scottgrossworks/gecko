@@ -9,36 +9,47 @@ This html page contains a form for capturing a potential new subscriber
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Gekko's Birthday</title>
+  <title>Gekko Preview Request</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <link rel="stylesheet" href="css/gecko_landing.css">
-    <link rel="icon" type="image/x-icon" href="img/SGW_favicon.ico">
- 
+  <link rel="icon" type="image/x-icon" href="img/SGW_favicon.ico">
 </head>
 <body>
+  <BR>
+  <BR>
+  <BR>
+  <div class="main-container">
+    
+    <BR> 
+    <BR>
+    <div class="banner-border-outer">
+      <div class="banner-text">GEKKO'S BIRTHDAY</div>
+    </div>
 
+    <div class="gecko-form-container">
+      <form action="https://unha4lumv1.execute-api.us-west-2.amazonaws.com/prod/preview" method="get" class="gecko-form" id="previewForm">
+        <label for="email">Email (required):</label>
+        <input type="email" id="email" name="email" required>
 
+        <label for="name">Name (optional):</label>
+        <input type="text" id="name" name="name">
 
+        <label for="zip">Zip Code (optional):</label>
+        <input type="text" id="zip" name="zip" pattern="\d{5}" maxlength="5" title="5-digit zip code">
 
+        <label for="interests">Interests (optional, comma separated):</label>
+        <input type="text" id="interests" name="interests">
 
-<div class="gecko-form-container">
-  <form action="https://unha4lumv1.execute-api.us-west-2.amazonaws.com/prod/preview" method="get" class="gecko-form" id="previewForm">
-    <label for="email">Email (required):</label>
-    <input type="email" id="email" name="email" required>
+        <button type="submit" class="gecko-btn">Send Me a Preview</button>
+      </form>
 
-    <label for="name">Name (optional):</label>
-    <input type="text" id="name" name="name">
-
-    <label for="zip">Zip Code (optional):</label>
-    <input type="text" id="zip" name="zip" pattern="\d{5}" maxlength="5" title="5-digit zip code">
-
-    <label for="interests">Interests (optional, comma separated):</label>
-    <input type="text" id="interests" name="interests">
-
-    <button type="submit" class="gecko-btn">Send Me a Preview</button>
-  </form>
-</div>
+      <BR>
+        <center>
+        <a style='color:chartreuse; text-decoration:none;font-size:larger' href="https://unha4lumv1.execute-api.us-west-2.amazonaws.com/prod/web">
+          Web Preview</a>
+          </center>
+    </div>
+  </div>
 
 
 
