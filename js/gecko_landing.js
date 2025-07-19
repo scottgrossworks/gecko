@@ -1,4 +1,3 @@
-
 // --- Date and Time ---
 function pad(n) { return n < 10 ? '0' + n : n; }
 function getPSTDate() {
@@ -13,6 +12,13 @@ function getPSTDate() {
   let offset = isDST ? -7 : -8;
   return new Date(utc + 3600000 * offset);
 }
+function getGreeting() {
+  const hour = getPSTDate().getHours();
+  if (hour >= 5 && hour < 12) return "GOOD MORNING";
+  if (hour >= 12 && hour < 17) return "GOOD AFTERNOON";
+  return "GOOD EVENING";
+}
+
 function updateDateTime() {
   const pst = getPSTDate();
   const days = ["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
@@ -20,13 +26,22 @@ function updateDateTime() {
   const dateStr = `${months[pst.getMonth()]} ${pst.getDate()}, ${pst.getFullYear()} - ${days[pst.getDay()]}`;
   document.getElementById('date-str').textContent = dateStr;
   
-  /*
-  let h = pst.getHours(), m = pst.getMinutes();
-  let ampm = h >= 12 ? "PM" : "AM";
-  let hour12 = h % 12; if (hour12 === 0) hour12 = 12;
-  let min = pad(m);
-  document.getElementById('time-str').textContent = `${hour12}:${min} ${ampm}`;
-  */
+  // Update greeting
+  const greetingElement = document.querySelector('.header-center');
+  if (greetingElement) {
+    greetingElement.textContent = getGreeting() + "!";
+  }
+  
+  // Update time
+  const timeElement = document.querySelector('.header-right');
+  if (timeElement) {
+    let h = pst.getHours(), m = pst.getMinutes();
+    let ampm = h >= 12 ? "PM" : "AM";
+    let hour12 = h % 12; 
+    if (hour12 === 0) hour12 = 12;
+    let min = pad(m);
+    timeElement.textContent = `${hour12}:${min} ${ampm}`;
+  }
 }
 setInterval(updateDateTime, 1000);
 updateDateTime();
@@ -40,11 +55,8 @@ setInterval(() => {
   images[idx].classList.add('active');
 }, 2000);
 
-
-
-
-  // --- Subscribe Form ---
-  document.getElementById('subscribe-form').addEventListener('submit', async function(e) {
+// --- Subscribe Form ---
+document.getElementById('subscribe-form').addEventListener('submit', async function(e) {
   e.preventDefault();
   const email = document.getElementById('subscribe-email').value.trim();
   const msgDiv = document.getElementById('subscribe-message');

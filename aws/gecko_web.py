@@ -60,16 +60,30 @@ def format_date():
 ##
 
 
+def get_greeting(hour):
+    if 5 <= hour < 12:
+        return "GOOD MORNING"
+    elif 12 <= hour < 17:
+        return "GOOD AFTERNOON"
+    else:
+        return "GOOD EVENING"
+
 def getHeaderAscii():
     now = datetime.now(ZoneInfo("America/Los_Angeles"))
     time_str = now.strftime("%-I:%M %p").upper()
     date_str = now.strftime("%B %d, %Y - %A").upper()
+    greeting = get_greeting(now.hour)
     header_html = f"""
     <table width="100%" style="font-family: Tahoma, Geneva, Verdana, sans-serif; border-collapse: collapse; background: black;">
       <tr>
         <td style="padding: 2px 0 4px 0;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="color: chartreuse; font-size: 1.3em; font-weight: bold; letter-spacing: 2px;">GOOD MORNING!</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; position: relative;">
+            <span style="width: 60px; display: flex; align-items: center;">
+              <a href="http://scottgross.works" target="_blank" rel="noopener">
+              <img src="https://s3.us-west-2.amazonaws.com/scottgross.works/SGW_favicon.ico" style="height: 32px; width: 32px;" alt="SGW">
+                </a>
+            </span>
+            <span style="color: chartreuse; font-size: 1.3em; font-weight: bold; letter-spacing: 2px; position: absolute; left: 50%; transform: translateX(-50%);">{greeting}!</span>
             <span style="color: chartreuse; font-size: 1.3em; font-weight: bold; letter-spacing: 2px;">{time_str}</span>
           </div>
         </td>
@@ -81,9 +95,11 @@ def getHeaderAscii():
       </tr>
       <tr>
         <td style="text-align: center; padding: 12px 0 10px 0;">
-          <span style="display: inline-block; border: 2px solid white; color: red; background: black; font-size: 1.7em; font-weight: bold; border-radius: 5px; padding: 8px 20px; letter-spacing: 2px;">
-            GEKKO'S BIRTHDAY
-          </span>
+          <div style="display: inline-block; border: 2px solid white; border-radius: 11px; padding: 3px; background: #111111;">
+            <span style="display: inline-block; border: 2px solid white; color: red; background: #111111; font-size: 2em; font-weight: bold; border-radius: 7px; padding: 10px 25px; letter-spacing: 2.5px; box-shadow: 0 0 12px #000a;">
+              GEKKO'S BIRTHDAY
+            </span>
+          </div>
         </td>
       </tr>
     </table>
@@ -92,29 +108,7 @@ def getHeaderAscii():
 
 
 
-##
-##
-##
-def render_links( subscription_link ):
-
-    #formatted_date = format_date()
-    
-    library_link = f"<a href='{LIBRARY_LINK}' target='_blank' style='color: gold; font-weight: bold; text-decoration: none; font-size: 1em;'>MBA Links</a>"
-    faq_link = f"<a href='{FAQ_LINK}' target='_blank' style='color: white; font-weight: bold; text-decoration: none; font-size: 1em;'>FAQ</a>"
-
-    header_html = "" 
-    header_html += f"""
-    <tr>
-    <td style='padding-top: 12px; letter-spacing: 1.1px;'>
-        <div style='display: flex; justify-content: space-between; align-items: center;'>
-        <span>{library_link}</span>
-        <span>{faq_link}</span>
-        <span style='text-align: right;'>{subscription_link}</span>
-        </div>
-    </td>
-    </tr>
-    """
-    return header_html
+## Removed render_links function as it's now handled inline
 
 
 
@@ -171,11 +165,18 @@ def render_web_version( stories ):
     # Get the header HTML
     header_html = getHeaderAscii()
 
-    web_link = f"<a href='{WEB_TARGET}' style='font-weight:600;'><font color='chartreuse'>Subscribe</font></a>"
+    web_link = f"<a href='{WEB_TARGET}' style='font-weight:600;font-size:1.2em; text-decoration:none'><font color='chartreuse'>Subscribe</font></a>"
 
-    sub_html = render_links( web_link )
-
-    header_html += sub_html
+    ## Separate links HTML outside the header table
+    links_html = f"""
+    <div style='width:100%; padding: 20px 0; display:flex; justify-content:center; align-items:center; gap: 1.5em;'>
+        <span><a href='{LIBRARY_LINK}' target='_blank' style='color: gold; font-weight: bold; text-decoration: none; font-size: 1.1em;'>MBA Links</a></span>
+        <span style='color: chartreuse; font-weight: bold; font-size: 1.1em;'>|</span>
+        <span><a href='{FAQ_LINK}' target='_blank' style='color: white; font-weight: bold; text-decoration: none; font-size: 1.1em;'>FAQ</a></span>
+        <span style='color: chartreuse; font-weight: bold; font-size: 1.1em;'>|</span>
+        <span>{web_link}</span>
+    </div>
+    """
 
     stories_html = render_stories(stories)
 
@@ -185,7 +186,10 @@ def render_web_version( stories ):
     
     body_html = f"<body bgcolor='black' text='white' link='white' alink='white' style='background-color:black;color:white;margin:0;padding:0;font-family:'Verdana',monospace;'><BR><BR> \
     <table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black'><tr><td align='center'><table width='600' border='1' cellspacing='0' cellpadding='20' bordercolor='white' bgcolor='black' style='border:1px solid white;'> \
-    <tr><td bgcolor='black'><table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black' style='font-family:'Tahoma',monospace;'>{header_html}</table><BR><font style='font-family:Helvetica, sans-serif; letter-spacing:1.25px;'>{stories_html}</font>"
+    <tr><td bgcolor='black'><table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black' style='font-family:'Tahoma',monospace;'>{header_html}</table></td></tr></table></td></tr></table> \
+    <table width='600' border='0' cellspacing='0' cellpadding='0' style='margin:0 auto;'><tr><td>{links_html}</td></tr></table> \
+    <table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black'><tr><td align='center'><table width='600' border='1' cellspacing='0' cellpadding='20' bordercolor='white' bgcolor='black' style='border:1px solid white;'> \
+    <tr><td bgcolor='black'><font style='font-family:Helvetica, sans-serif; letter-spacing:1.25px;'>{stories_html}</font>"
     
     footer_html = f"<hr color='white' size='1' style='border:none;border-top:1px solid white;margin:20px 0;'><div align='center' style='color:chartreuse;font-size:12px;text-align:center;margin-top:30px;'>&copy; {datetime.now().year} GEKKO'S BIRTHDAY Newsletter, produced by Scott Gross. All rights reserved.<BR><BR>{web_link}<BR></div></td></tr></table></td></tr></table><BR></body></html>"
     

@@ -80,10 +80,19 @@ def format_date():
 ##
 
 
+def get_greeting(hour):
+    if 5 <= hour < 12:
+        return "GOOD MORNING"
+    elif 12 <= hour < 17:
+        return "GOOD AFTERNOON"
+    else:
+        return "GOOD EVENING"
+
 def getHeaderAscii():
     now = datetime.now(ZoneInfo("America/Los_Angeles"))
     time_str = now.strftime("%-I:%M %p").upper()
     date_str = now.strftime("%B %d, %Y - %A").upper()
+    greeting = get_greeting(now.hour)
     header_html = f"""
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:black;">
   <tr>
@@ -93,8 +102,8 @@ def getHeaderAscii():
           <td style="padding: 12px 0 4px 0;"><center>
             <table width="90%" cellpadding="0" cellspacing="0" border="0">
               <tr>
-                <td align="left" style="color: chartreuse; font-size: 1.2em; font-weight: bold; letter-spacing: 1.5px; font-family: Tahoma, Geneva, Verdana, sans-serif;">
-                  GOOD MORNING!
+                <td align="left" style="color: chartreuse; font-size: 1.2em; font-weight: bold; letter-spacing: 1.5px; font-family: Tahoma, Geneva, Verdana, sans-serif; width: 50%;">
+                  {greeting}!
                 </td>
                 <td align="right" style="color: chartreuse; font-size: 1.2em; font-weight: bold; letter-spacing: 1.5px; font-family: Tahoma, Geneva, Verdana, sans-serif;">
                   {time_str}
@@ -110,7 +119,7 @@ def getHeaderAscii():
         </tr>
         <tr>
           <td align="center" style="padding: 12px 0 20px 0;">
-            <span style="display: inline-block; border: 2px solid white; color: red; background: black; font-size: 1.7em; font-weight: bold; border-radius: 5px; padding: 8px 20px; letter-spacing: 2px; font-family: Tahoma, Geneva, Verdana, sans-serif;">
+            <span style="display: inline-block; border: 2px solid white; color: red; background: #111111; font-size: 1.7em; font-weight: bold; border-radius: 5px; padding: 8px 20px; letter-spacing: 2px; font-family: Tahoma, Geneva, Verdana, sans-serif;">
               GEKKO'S BIRTHDAY
             </span>
           </td>
@@ -133,15 +142,14 @@ def render_links( subscription_link ):
     
     library_link = f"<a href='{LIBRARY_LINK}' target='_blank' style='color: gold; font-weight: bold; text-decoration: none; font-size: 1em;'>MBA Links</a>"
     faq_link = f"<a href='{FAQ_LINK}' target='_blank' style='color: white; font-weight: bold; text-decoration: none; font-size: 1em;'>FAQ</a>"
+    pipe = "<span style='color: chartreuse; font-weight: bold; font-size: 1.5em;padding-left:20px;padding-right:20px;'>|</span>"
 
     header_html = f"""
 <tr>
   <td style='letter-spacing: 1.1px;'><center>
     <table width="{WIDTH}" cellpadding="0" cellspacing="0" border="0">
       <tr>
-        <td align="left" style="padding: 0 20px;">{library_link}</td>
-        <td align="center" style="padding: 0 20px;">{faq_link}</td>
-        <td align="right" style="padding: 0 20px;">{subscription_link}</td>
+        <td align="center" style="padding: 5px 0;">{library_link} {pipe} {faq_link} {pipe} {subscription_link}</td>
       </tr>
     </table></center>
   </td>

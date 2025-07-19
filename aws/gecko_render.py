@@ -90,7 +90,7 @@ def render_stories( stories ):
         # combine fields into story block HTML content
         #
         
-        story_start = "<table width='100%' border='0' cellspacing='0' cellpadding='10' bgcolor='black' style='color:white;margin-bottom: 20px;'><tr><td bgcolor='black'>"
+        story_start = "<table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black' style='color:white;margin-bottom: 20px;'><tr><td bgcolor='black'>"
 
         # Split title from rest with a true break
         # Put category first, then title, then smaller URL
