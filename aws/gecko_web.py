@@ -77,13 +77,13 @@ def getHeaderAscii():
     <table width="100%" style="font-family: Tahoma, Geneva, Verdana, sans-serif; border-collapse: collapse; background: black;">
       <tr>
         <td style="padding: 2px 0 4px 0;">
-          <div style="display: flex; justify-content: space-between; align-items: center; position: relative;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="width: 60px; display: flex; align-items: center;">
               <a href="http://scottgross.works" target="_blank" rel="noopener">
               <img src="https://s3.us-west-2.amazonaws.com/scottgross.works/SGW_favicon.ico" style="height: 32px; width: 32px;" alt="SGW">
                 </a>
             </span>
-            <span style="color: chartreuse; font-size: 1.3em; font-weight: bold; letter-spacing: 2px; position: absolute; left: 50%; transform: translateX(-50%);">{greeting}!</span>
+            <span style="color: chartreuse; font-size: 1.3em; font-weight: bold; letter-spacing: 2px;">{greeting}!</span>
             <span style="color: chartreuse; font-size: 1.3em; font-weight: bold; letter-spacing: 2px;">{time_str}</span>
           </div>
         </td>
@@ -182,7 +182,7 @@ def render_web_version( stories ):
 
     ## COMPOSE THE COMPLETE HTML
     ##
-    top_html = f"<!DOCTYPE html><html><head><meta charset='UTF-8'><title>GEKKO</title><style>body,html{{background-color:black;color:white;margin:0;padding:0;font-family:'Tahoma',monospace;}}</style></head>"
+    top_html = f"<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Gekko's Birthday</title><link rel='icon' type='image/x-icon' href='https://s3.us-west-2.amazonaws.com/scottgross.works/SGW_favicon.ico'><style>body,html{{background-color:black;color:white;margin:0;padding:0;font-family:'Tahoma',monospace;}}</style></head>"
     
     body_html = f"<body bgcolor='black' text='white' link='white' alink='white' style='background-color:black;color:white;margin:0;padding:0;font-family:'Verdana',monospace;'><BR><BR> \
     <table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black'><tr><td align='center'><table width='600' border='1' cellspacing='0' cellpadding='20' bordercolor='white' bgcolor='black' style='border:1px solid white;'> \
@@ -191,7 +191,8 @@ def render_web_version( stories ):
     <table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black'><tr><td align='center'><table width='600' border='1' cellspacing='0' cellpadding='20' bordercolor='white' bgcolor='black' style='border:1px solid white;'> \
     <tr><td bgcolor='black'><font style='font-family:Helvetica, sans-serif; letter-spacing:1.25px;'>{stories_html}</font>"
     
-    footer_html = f"<hr color='white' size='1' style='border:none;border-top:1px solid white;margin:20px 0;'><div align='center' style='color:chartreuse;font-size:12px;text-align:center;margin-top:30px;'>&copy; {datetime.now().year} GEKKO'S BIRTHDAY Newsletter, produced by Scott Gross. All rights reserved.<BR><BR>{web_link}<BR></div></td></tr></table></td></tr></table><BR></body></html>"
+    footer_html = f"<hr color='white' size='1' style='border:none;border-top:1px solid white;margin:20px 0;'><div align='center' style='color:chartreuse;font-size:12px;text-align:center;margin-top:30px;'>&copy; {datetime.now().year} GEKKO'S BIRTHDAY Newsletter, produced by \
+        <a href='http://scottgross.works'>Scott Gross</a>. All rights reserved.<BR><BR>{web_link}<BR></div></td></tr></table></td></tr></table><BR></body></html>"
     
     final_html = top_html + body_html + footer_html
     
@@ -240,7 +241,19 @@ def get_stories_without_update(count=3):
 ##
 ##
 def lambda_handler(event, context):
-
+    # Log all incoming requests for debugging
+    logger.info(f"Incoming web request - Method: {event.get('httpMethod')}, Path: {event.get('path')}, QueryParams: {event.get('queryStringParameters')}")
+    
+    # Handle favicon requests
+    if event.get('path') == '/favicon.ico':
+        return {
+            'statusCode': 301,  # Permanent redirect
+            'headers': {
+                'Location': 'https://s3.us-west-2.amazonaws.com/scottgross.works/SGW_favicon.ico',
+                'Cache-Control': 'public, max-age=86400'  # Cache for 24 hours
+            },
+            'body': ''
+        }
     
     logger.info(f"Generating web version....")
             

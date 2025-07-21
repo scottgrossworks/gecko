@@ -18,9 +18,6 @@ This html page contains a form for capturing a potential new subscriber
   <link rel="icon" type="image/x-icon" href="img/SGW_favicon.ico">
 </head>
 <body>
-  <BR>
-  <BR>
-  <BR>
   <div class="main-container">
     
     <BR> 
@@ -43,7 +40,11 @@ This html page contains a form for capturing a potential new subscriber
         <label for="interests">Interests (optional, comma separated):</label>
         <input type="text" id="interests" name="interests">
 
-        <button type="submit" class="gecko-btn">Send Me a Preview</button>
+        <BR>
+        <center>
+          <button type="submit" class="gecko-btn" style="font-size:1.5em;width:300px">Send Me a Preview</button>
+        </center>
+ 
       </form>
 
       <BR>
@@ -93,24 +94,49 @@ This html page contains a form for capturing a potential new subscriber
         });
     });
 
-    document.getElementById('publishBtn').addEventListener('click', function() {
+
+    document.getElementById('publishBtn').addEventListener('click', function(e) {
       var button = this;
+      var msgDiv = document.getElementById('publishMessage');
       button.disabled = true;
-      fetch('https://unha4lumv1.execute-api.us-west-2.amazonaws.com/prod/publish?secret_key=2632dRnotliM2169329088')
-        .then(res => res.ok ? res.json() : Promise.reject())
+      button.textContent = 'Publishing...';
+      msgDiv.textContent = '';
+      
+      fetch('https://unha4lumv1.execute-api.us-west-2.amazonaws.com/prod/publish?source=manual&secret_key=2632dRnotliM2169329088')
+        .then(res => {
+          if (res.ok) {
+            return res.json();
+          } else {
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+          }
+        })
         .then(data => {
-          button.style.background = 'chartreuse';
-          button.style.color = 'white'; 
-          button.textContent = 'Published!';
-          document.getElementById('publishMessage').textContent = 'Newsletter published successfully!';
+          if (data.stories_count === 0) {
+            // No stories to publish
+            button.style.background = 'orange';
+            button.style.color = 'black';
+            button.textContent = 'No Stories';
+            msgDiv.style.color = 'orange';
+            msgDiv.textContent = data.message + '. Add new stories to publish.';
+          } else {
+            // Successfully published
+            button.style.background = 'chartreuse';
+            button.style.color = 'white';
+            button.textContent = 'Published!';
+            msgDiv.style.color = 'chartreuse';
+            msgDiv.textContent = `Newsletter sent to ${data.recipients_count} recipients!`;
+          }
         })
         .catch(() => {
           button.disabled = false;
-          button.textContent = 'Publish Now';
-          document.getElementById('publishMessage').textContent = 'Failed to publish newsletter. Please try again.';
+          button.style.background = '#111';
+          button.style.color = 'red';
+          button.textContent = 'Error';
+          msgDiv.style.color = 'red';
+          msgDiv.textContent = 'Error publishing newsletter. Please try again.';
         });
     });
-    </script>
+</script>
 
 
 

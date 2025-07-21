@@ -115,11 +115,64 @@ def process_subscribe(body, email):
     
     logger.info(f"Subscriber registered/updated: {email}")
     
+    # Check if we should send first newsletter issue
+    send_first_issue = body.get('send_first_issue', 'false').lower() == 'true'
+    
+    if send_first_issue:
+        try:
+            import boto3
+            lambda_client = boto3.client('lambda')
+            
+            # Call publisher in single_shot mode
+            payload = {
+                'email': email
+            }
+            
+            response = lambda_client.invoke(
+                FunctionName=os.environ.get('PUBLISHER_FUNCTION', 'gecko_publisher'),
+                InvocationType='Event',  # Async
+                Payload=json.dumps(payload)
+            )
+            
+            logger.info(f"First newsletter sent to: {email}")
+            
+            # Update user record to mark first issue as sent
+            dynamodb.update_item(
+                TableName=TABLE_NAME,
+                Key={
+                    'pk': {'S': 'user'},
+                    'sk': {'S': email}
+                },
+                UpdateExpression='SET first_issue_sent = :val',
+                ExpressionAttributeValues={
+                    ':val': {'S': datetime.utcnow().isoformat() + 'Z'}
+                }
+            )
+            
+            return {
+                'message': 'Subscription successful and first newsletter sent',
+                'email': email,
+                'status': STATUS_SUBSCRIBED,
+                'first_issue_sent': True
+            }
+            
+        except Exception as e:
+            logger.error(f"Error sending first newsletter to {email}: {str(e)}")
+            # Still return success for subscription, just note the newsletter issue
+            return {
+                'message': 'Subscription successful but first newsletter failed to send',
+                'email': email,
+                'status': STATUS_SUBSCRIBED,
+                'newsletter_error': str(e)
+            }
+    
     return {
         'message': 'Subscription successful',
         'email': email,
         'status': STATUS_SUBSCRIBED
     }
+
+
 
 ##
 ##
@@ -175,6 +228,49 @@ def lambda_handler(event, context):
     try:
         logger.info(f"Subscriber Event received: {json.dumps(event)}")
 
+        # Check if this is an SES email event
+        if 'Records' in event and event['Records']:
+            # Handle SES email event (unsubscribe emails)
+            record = event['Records'][0]
+            if record.get('eventSource') == 'aws:ses':
+                # Extract email from SES event
+                ses_mail = record['ses']['mail']
+                from_email = ses_mail['commonHeaders']['from'][0]
+                
+                # Extract just the email address from "Name <email@domain.com>" format
+                import re
+                email_match = re.search(r'<([^>]+)>', from_email)
+                if email_match:
+                    email = email_match.group(1).strip().lower()
+                else:
+                    # If no angle brackets, assume the whole string is the email
+                    email = from_email.strip().lower()
+                
+                # Check destination to determine action
+                destination = ses_mail['destination'][0]
+                if 'unsubscribe' in destination.lower():
+                    action = ACTION_UNSUBSCRIBE
+                else:
+                    action = ACTION_SUBSCRIBE
+                
+                logger.info(f"SES email event - Email: {email}, Action: {action}")
+                
+                # Validate email
+                if not re.match(EMAIL_REGEX, email):
+                    raise ValueError(f"Invalid email format: {email}")
+                
+                # Process the action
+                if action == ACTION_UNSUBSCRIBE:
+                    result = process_unsubscribe(email)
+                else:
+                    result = process_subscribe({}, email)
+                
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps(result)
+                }
+        
+        # Handle API Gateway request
         # Extract params (API Gateway GET or direct test)
         params = event.get('queryStringParameters', {}) or {}
 

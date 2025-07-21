@@ -444,7 +444,7 @@ html, body {
 
 .gecko-btn {
   width: 100%;
-  padding: clamp(0.6em, 2vw, 0.8em);
+  padding: 1.5vw;
   border-radius: 4px;
   border: 2px solid chartreuse;
   background: #111;
@@ -454,7 +454,6 @@ html, body {
   letter-spacing: 1px;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
-  margin-top: 1em;
 }
 
 .gecko-btn:hover {

@@ -67,7 +67,7 @@
       </div>
       <form class="subscribe-form" id="subscribe-form" autocomplete="off">
         <input type="email" id="subscribe-email" name="email" placeholder="Your email" required>
-        <button type="submit">Subscribe</button>
+        <button type="submit" id="subscribe-btn">Subscribe</button>
       </form>
       <div id="subscribe-message"></div>
 
@@ -138,18 +138,36 @@
       form.addEventListener('submit', function(e) {
         e.preventDefault();
         const formData = new FormData(form);
+        // Add send_first_issue parameter for landing page subscriptions
+        formData.append('send_first_issue', 'true');
         const params = new URLSearchParams(formData).toString();
+        const messageDiv = document.getElementById('subscribe-message');
+        
         button.disabled = true;
-        fetch('https://unha4lumv1.execute-api.us-west-2.amazonaws.com/prod/preview?' + params)
-          .then(res => res.ok ? res.json() : Promise.reject())
+        button.textContent = 'Subscribing...';
+        messageDiv.textContent = '';
+        
+        fetch('https://unha4lumv1.execute-api.us-west-2.amazonaws.com/prod/subscribe?' + params)
+          .then(res => {
+            if (res.ok) {
+              return res.json();
+            } else {
+              throw new Error(`HTTP ${res.status}`);
+            }
+          })
           .then(data => {
             button.style.background = 'chartreuse';
-            button.style.color = 'white';
+            button.style.color = 'black';
             button.textContent = 'Subscribed!';
+            messageDiv.style.color = 'chartreuse';
+            messageDiv.textContent = 'Welcome to Gekko\'s Birthday! Check your email for updates.';
           })
-          .catch(() => {
+          .catch(error => {
             button.disabled = false;
-            button.textContent = 'Try Again';
+            button.textContent = 'Subscribe';
+            messageDiv.style.color = '#ff6b6b';
+            messageDiv.textContent = 'Subscription failed. Please try again or contact support.';
+            console.error('Subscribe error:', error);
           });
       });
     });

@@ -94,7 +94,7 @@ def render_stories( stories ):
 
         # Split title from rest with a true break
         # Put category first, then title, then smaller URL
-        story_content  = f"<div style='color: red; font-style: italic; font-size: 15px; margin-bottom: 6px;'><i>{category}</i></div>"
+        story_content  = f"<div style='color: coral; font-style: italic; font-size: 15px; margin-bottom: 6px;'><i>{category}</i></div>"
         story_content += f"<h2 style='color: white; margin: 0 0 4px 0;'>{title}</h2>"
         story_content += f"<div style='line-height: 1.2; font-size: 13px; margin: 0 0 14px 0;'>{href}</div>"
         story_content += f"<div style='line-height:1.4; margin-bottom: 8px;'><b style='color:chartreuse'>Story</b>:&nbsp;&nbsp;{summary}</div>"

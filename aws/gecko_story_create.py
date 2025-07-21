@@ -111,7 +111,7 @@ def lambda_handler(event, context):
             'take': {'S': take.strip()},
             'url': {'S': url.strip()},
             'date_created': {'S': now},
-            'status': {'S': 'queued'},
+            'status': {'S': 'queued'},  # default to queued
             'published_date': {'NULL': True}
         }
         
