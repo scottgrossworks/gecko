@@ -60,29 +60,55 @@ document.getElementById('subscribe-form').addEventListener('submit', async funct
   e.preventDefault();
   const email = document.getElementById('subscribe-email').value.trim();
   const msgDiv = document.getElementById('subscribe-message');
+  const button = document.getElementById('subscribe-btn');
+  
   msgDiv.textContent = '';
   if (!email) {
     msgDiv.textContent = 'Please enter your email.';
     msgDiv.style.color = '#ff1616';
     return;
   }
+  
+  // Disable button and show loading state
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Subscribing...';
+  }
+  
   try {
-    const resp = await fetch('/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
+    // Create form data with send_first_issue parameter
+    const formData = new FormData();
+    formData.append('email', email);
+    formData.append('send_first_issue', 'true');
+    const params = new URLSearchParams(formData).toString();
+    
+    const resp = await fetch('https://unha4lumv1.execute-api.us-west-2.amazonaws.com/prod/subscribe?' + params);
+    
     if (resp.ok) {
-      msgDiv.textContent = 'Thank you for subscribing!';
+      msgDiv.textContent = 'Welcome to Gekko\'s Birthday! Check your email for updates.';
       msgDiv.style.color = '#39FF14';
       document.getElementById('subscribe-form').reset();
+      if (button) {
+        button.style.background = 'chartreuse';
+        button.style.color = 'black';
+        button.textContent = 'Subscribed!';
+      }
     } else {
       const data = await resp.json().catch(() => ({}));
-      msgDiv.textContent = data.error || 'Subscription failed. Please try again.';
+      msgDiv.textContent = data.error || 'Subscription failed. Please try again or contact support.';
       msgDiv.style.color = '#ff1616';
+      if (button) {
+        button.disabled = false;
+        button.textContent = 'Subscribe';
+      }
     }
   } catch (err) {
-    msgDiv.textContent = 'Could not connect. Please try again later.';
+    msgDiv.textContent = 'Subscription failed. Please try again or contact support.';
     msgDiv.style.color = '#ff1616';
+    if (button) {
+      button.disabled = false;
+      button.textContent = 'Subscribe';
+    }
+    console.error('Subscribe error:', err);
   }
 });

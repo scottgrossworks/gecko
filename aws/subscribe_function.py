@@ -34,6 +34,8 @@ STATUS_UNSUBSCRIBED = 'unsubscribed'
 
 EMAIL_REGEX = r"^[\w\.-]+@[\w\.-]+\.\w+$"
 
+PUBLISHER_FUNCTION = os.environ.get('PUBLISHER_FUNCTION')
+
 
 ##
 ##
@@ -120,7 +122,6 @@ def process_subscribe(body, email):
     
     if send_first_issue:
         try:
-            import boto3
             lambda_client = boto3.client('lambda')
             
             # Call publisher in single_shot mode
@@ -129,7 +130,7 @@ def process_subscribe(body, email):
             }
             
             response = lambda_client.invoke(
-                FunctionName=os.environ.get('PUBLISHER_FUNCTION', 'gecko_publisher'),
+                FunctionName=PUBLISHER_FUNCTION,
                 InvocationType='Event',  # Async
                 Payload=json.dumps(payload)
             )
@@ -226,6 +227,10 @@ def process_unsubscribe(email):
   
 def lambda_handler(event, context):
     try:
+
+        if not PUBLISHER_FUNCTION:
+            raise ValueError("PUBLISHER_FUNCTION environment variable is not set")
+
         logger.info(f"Subscriber Event received: {json.dumps(event)}")
 
         # Check if this is an SES email event
@@ -238,7 +243,6 @@ def lambda_handler(event, context):
                 from_email = ses_mail['commonHeaders']['from'][0]
                 
                 # Extract just the email address from "Name <email@domain.com>" format
-                import re
                 email_match = re.search(r'<([^>]+)>', from_email)
                 if email_match:
                     email = email_match.group(1).strip().lower()

@@ -375,7 +375,7 @@ def render_email_version_with_subscribe(stories, gecko_subscribe):
     subscribe_body = (
         "I want news and insights at the intersection of business, technology, and culture. "
         "Like Bud Fox in Wall Street, start my day with the information that can change my life. "
-        "<b>Sign me up</b> for the Gekko's Birthday Newsletter!"
+        "Sign me up for the Gekko's Birthday Newsletter!"
     )
     
     # Properly encode the body for mailto link
