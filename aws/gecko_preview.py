@@ -38,32 +38,7 @@ def create_preview_user(email, name=None, zip_code=None, interests=None):
     # Generate timestamp
     now = datetime.utcnow().isoformat() + 'Z'
     
-    # Build user item with required fields (no status = null status)
-    item = {
-        'pk': {'S': 'user'},
-        'sk': {'S': email},
-        'date_created': {'S': now}
-        # Note: No 'status' field = null status (preview user)
-    }
-    
-    # Add optional fields if present
-    if name and name.strip():
-        item['name'] = {'S': name.strip()}
-        
-    if zip_code and zip_code.strip():
-        item['zip_code'] = {'S': zip_code.strip()}
-        
-    if interests:
-        if isinstance(interests, str):
-            # Convert comma-separated string to list
-            interests_list = [interest.strip() for interest in interests.split(',') if interest.strip()]
-        else:
-            interests_list = interests
-            
-        if interests_list:
-            item['interests'] = {'L': [{'S': interest} for interest in interests_list]}
-    
-    # Check if user already exists
+    # Check if user already exists - FETCH FIRST to preserve existing data
     try:
         existing = dynamodb.get_item(
             TableName=TABLE_NAME,
@@ -75,19 +50,48 @@ def create_preview_user(email, name=None, zip_code=None, interests=None):
         
         if 'Item' in existing:
             logger.info(f"Preview user already exists, updating: {email}")
-            # Preserve the original date_created if it exists
-            if 'date_created' in existing['Item']:
-                item['date_created'] = existing['Item']['date_created']
-            # Preserve existing status if they're already subscribed
-            if 'status' in existing['Item']:
-                item['status'] = existing['Item']['status']
-                logger.info(f"Preserving existing status for {email}")
+            # START WITH EXISTING ITEM - PRESERVE ALL EXISTING DATA
+            item = existing['Item'].copy()
+        else:
+            logger.info(f"Creating new preview user: {email}")
+            # NEW USER - Build base item
+            item = {
+                'pk': {'S': 'user'},
+                'sk': {'S': email},
+                'date_created': {'S': now}
+                # Note: No 'status' field = null status (preview user)
+            }
             
     except ClientError as e:
         logger.error(f"Error checking for existing user: {str(e)}")
-        # Continue with creation attempt
+        # Create new user if fetch fails
+        item = {
+            'pk': {'S': 'user'},
+            'sk': {'S': email},
+            'date_created': {'S': now}
+        }
     
-    # Save to DynamoDB
+    # Update ONLY the fields provided in this request (don't obliterate others)
+    if name and name.strip():
+        item['name'] = {'S': name.strip()}
+        logger.info(f"Updating name for {email}")
+        
+    if zip_code and zip_code.strip():
+        item['zip_code'] = {'S': zip_code.strip()}
+        logger.info(f"Updating zip_code for {email}")
+        
+    if interests:
+        if isinstance(interests, str):
+            # Convert comma-separated string to list
+            interests_list = [interest.strip() for interest in interests.split(',') if interest.strip()]
+        else:
+            interests_list = interests
+            
+        if interests_list:
+            item['interests'] = {'L': [{'S': interest} for interest in interests_list]}
+            logger.info(f"Updating interests for {email}: {interests_list}")
+    
+    # Save to DynamoDB (preserves all existing fields not updated)
     try:
         dynamodb.put_item(TableName=TABLE_NAME, Item=item)
         logger.info(f"Preview user profile created/updated: {email}")

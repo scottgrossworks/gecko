@@ -528,6 +528,10 @@ html, body {
       margin-left: 1em;
     }
 
+    /* Reduce top/bottom padding of banner text by half for wide screens */
+    .banner-text {
+      padding: clamp(7.5px, 1.5vw, 24px) clamp(20px, 5vw, 48px);
+    }
 
     .banner {
       margin-bottom: 18px !important; /* reduce as needed */
