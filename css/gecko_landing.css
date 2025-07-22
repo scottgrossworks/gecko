@@ -107,12 +107,11 @@ html, body {
   white-space: nowrap;
 }
 
-
 .slideshow-container {
   width: 400px;
   max-width: 90vw;
   aspect-ratio: 16/9;
-  margin: auto;
+  margin: 1vw auto;
   position: relative;
   background: #111;
   border-radius: 4px;
@@ -124,6 +123,11 @@ html, body {
   justify-content: center;
 }
 
+@media (min-width: 600px) {
+  .slideshow-container {
+    width: 500px;
+  }
+}
 
 .slide-img {
   position: absolute;
@@ -143,7 +147,7 @@ html, body {
 }
 
 .banner {
-    margin:2em;
+    margin:1em;
     width: 100%;
     display: flex;
     justify-content: center;
@@ -461,7 +465,7 @@ html, body {
   color: #111;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 599px) {
 
     .main-container {
       padding: 5px 2vw 10vw 2vw;
@@ -474,11 +478,10 @@ html, body {
       min-width: 0;
     }
   
-  
     .links-row {
       width: 100%;
       margin: 0 auto;
-      font-size: clamp(1em, 3vw, 1.5em);  /* Responsive font size that won't get too small */
+      font-size: 1.2em;
     }
   
   
