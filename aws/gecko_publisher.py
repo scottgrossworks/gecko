@@ -511,7 +511,7 @@ Take the next 2–4 words (configurable).
 Join them for a concise subject.
 Fallback to 'Newsletter' if not enough info.
 """
-def extract_subject_snippet(title, num_words=3):
+def extract_subject_snippet(title, num_words=5):
     if not title:
         return "Newsletter"
     # Remove punctuation
@@ -721,8 +721,8 @@ def lambda_handler(event, context):
             # Construct subject for single shot
             title_dict = stories[0].get('title', {})
             title_str = title_dict.get('S', '') if isinstance(title_dict, dict) else str(title_dict)
-            subject_snippet = extract_subject_snippet(title_str, num_words=3)
-            subject = f"Gecko's Birthday - {subject_snippet}"
+            subject_snippet = extract_subject_snippet(title_str, num_words=5)
+            subject = subject_snippet
         else:
             # Use unsubscribe link for broadcast publish
             gecko_link = EMAIL_TARGET  # Unsubscribe email
@@ -731,8 +731,8 @@ def lambda_handler(event, context):
             # Construct subject for broadcast publish
             title_dict = stories[0].get('title', {})
             title_str = title_dict.get('S', '') if isinstance(title_dict, dict) else str(title_dict)
-            subject_snippet = extract_subject_snippet(title_str, num_words=3)
-            subject = f"Gecko's Birthday - {subject_snippet}"
+            subject_snippet = extract_subject_snippet(title_str, num_words=5)
+            subject = subject_snippet
         
         # 3. Send emails
         if preview_mode:
