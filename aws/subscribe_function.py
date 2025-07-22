@@ -51,6 +51,39 @@ def hash_password(password):
 ##
 ##
 ##
+def normalize_email(email):
+    """Normalize email addresses to handle institutional routing
+    
+    Common patterns:
+    - sbgross@exchange.uci.edu -> sbgross@uci.edu
+    - user@mail.domain.edu -> user@domain.edu
+    - user@smtp.domain.com -> user@domain.com
+    """
+    email = email.strip().lower()
+    
+    # Handle exchange server routing patterns
+    exchange_patterns = [
+        r'@exchange\.([^.]+\.[^.]+)$',  # @exchange.domain.edu -> @domain.edu
+        r'@mail\.([^.]+\.[^.]+)$',     # @mail.domain.edu -> @domain.edu  
+        r'@smtp\.([^.]+\.[^.]+)$',     # @smtp.domain.com -> @domain.com
+        r'@mx\.([^.]+\.[^.]+)$',       # @mx.domain.com -> @domain.com
+    ]
+    
+    for pattern in exchange_patterns:
+        match = re.search(pattern, email)
+        if match:
+            domain = match.group(1)
+            username = email.split('@')[0]
+            normalized = f"{username}@{domain}"
+            logger.info(f"Email normalized: {email} -> {normalized}")
+            return normalized
+    
+    return email
+
+
+##
+##
+##
 def process_subscribe(body, email):
     """Process a subscription request"""
     logger.info(f"Processing subscription for: {email}")
@@ -250,6 +283,9 @@ def lambda_handler(event, context):
                     # If no angle brackets, assume the whole string is the email
                     email = from_email.strip().lower()
                 
+                # Normalize email to handle exchange server routing
+                email = normalize_email(email)
+                
                 # Check destination to determine action
                 destination = ses_mail['destination'][0]
                 if 'unsubscribe' in destination.lower():
@@ -284,6 +320,10 @@ def lambda_handler(event, context):
         email = params['email'].strip().lower()
         if not email:
             raise ValueError("Email cannot be empty")
+        
+        # Normalize email to handle exchange server routing
+        email = normalize_email(email)
+        
         if not re.match(EMAIL_REGEX, email):
             raise ValueError("Invalid email format")
 

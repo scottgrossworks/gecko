@@ -218,7 +218,7 @@ def get_stories_without_update(count=3):
             KeyConditionExpression='#pk = :pk',
             ExpressionAttributeNames={'#pk': 'pk'},
             ExpressionAttributeValues={':pk': {'S': 'story'}},
-            ScanIndexForward=False,  # Descending order by sort key
+            ScanIndexForward=True,  # Ascending order by sort key (FIFO)
             Limit=count
         )
         

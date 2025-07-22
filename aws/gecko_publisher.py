@@ -194,7 +194,7 @@ def get_and_update_stories(count=3):
             KeyConditionExpression='#status = :status',
             ExpressionAttributeNames={'#status': 'status'},
             ExpressionAttributeValues={':status': {'S': 'queued'}},
-            ScanIndexForward=False,  # Descending order by date
+            ScanIndexForward=True,  # Ascending order by date (FIFO - oldest first)
             Limit=count
         )
         
@@ -203,6 +203,8 @@ def get_and_update_stories(count=3):
         if not stories:
             logger.warning("No queued stories found in DynamoDB")
             return []
+        
+
         
         # Ensure we only process the requested count
         stories = stories[:count]
@@ -254,7 +256,7 @@ def get_stories_without_update(count=3):
             KeyConditionExpression='#status = :status',
             ExpressionAttributeNames={'#status': 'status'},
             ExpressionAttributeValues={':status': {'S': 'queued'}},
-            ScanIndexForward=False,  # Descending order by date
+            ScanIndexForward=True,  # Ascending order by date (FIFO - oldest first)
             Limit=count
         )
         
@@ -263,6 +265,8 @@ def get_stories_without_update(count=3):
         if not stories:
             logger.warning("No queued stories found in DynamoDB")
             return []
+        
+
         
         # Ensure we only process the requested count
         stories = stories[:count]
@@ -344,7 +348,7 @@ def render_email_version( stories, gecko_unsub ):
     
     body_html = f"<body bgcolor='black' text='white' link='white' alink='white' style='background-color:black;color:white;margin:0;padding:0;font-family:'Verdana',monospace;'><BR><BR> \
     <table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black'><tr><td align='center'><table width='600' border='0' cellspacing='0' cellpadding='20' bgcolor='black'> \
-    <tr><td bgcolor='black'><table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black' style='font-family:'Tahoma',monospace;'>{header_html}</table><BR><font style='font-family:Helvetica, sans-serif; letter-spacing:1.25px;'>{stories_html}</font>"
+    <tr><td bgcolor='black' style='padding:15px;'><table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black' style='font-family:'Tahoma',monospace;'>{header_html}</table><BR><div style='margin:0 15px;'><font style='font-family:Helvetica, sans-serif; letter-spacing:1.25px;'>{stories_html}</font></div>"
     
     footer_html = f"<hr color='white' size='1' style='border:none;border-top:1px solid white;margin:20px 0;'><div align='center' style='color:chartreuse;font-size:12px;text-align:center;margin-top:20px;'>&copy; {datetime.now().year} GEKKO'S BIRTHDAY Newsletter, \
     produced by <a href='http://scottgross.works'>Scott Gross</a>. All rights reserved.<BR>{mailto_unsub}<BR></div></td></tr></table></td></tr></table><BR></body></html>"
@@ -400,7 +404,7 @@ def render_email_version_with_subscribe(stories, gecko_subscribe):
     
     body_html = f"<body bgcolor='black' text='white' link='white' alink='white' style='background-color:black;color:white;margin:0;padding:0;font-family:'Verdana',monospace;'><BR><BR> \
     <table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black'><tr><td align='center'><table width='600' border='0' cellspacing='0' cellpadding='20' bgcolor='black'> \
-    <tr><td bgcolor='black'><table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black' style='font-family:'Tahoma',monospace;'>{header_html}</table><BR><font style='font-family:Helvetica, sans-serif; letter-spacing:1.25px;'>{stories_html}</font>"
+    <tr><td bgcolor='black' style='padding:15px;'><table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black' style='font-family:'Tahoma',monospace;'>{header_html}</table><BR><div style='margin:0 15px;'><font style='font-family:Helvetica, sans-serif; letter-spacing:1.25px;'>{stories_html}</font></div>"
     
     footer_html = f"<hr color='white' size='1' style='border:none;border-top:1px solid white;margin:20px 0;'><div align='center' style='color:chartreuse;font-size:12px;text-align:center;margin-top:20px;'>&copy; {datetime.now().year} GEKKO'S BIRTHDAY Newsletter, \
     produced by <a href='http://scottgross.works'>Scott Gross</a>. All rights reserved.<BR>{mailto_subscribe}<BR></div></td></tr></table></td></tr></table><BR></body></html>"

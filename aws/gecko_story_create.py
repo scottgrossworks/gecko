@@ -88,7 +88,7 @@ def lambda_handler(event, context):
         if start == -1 or end <= start:
             raise ValueError("No valid JSON object found")
         
-        json_str = body_text[start:end].replace('\r\n', '').replace('\n', ' ').strip()
+        json_str = body_text[start:end].replace('\r\n', ' ').replace('\n', ' ').strip()
         print(f"JSON: {json_str}")
         payload = json.loads(json_str)
         now = datetime.utcnow().isoformat() + 'Z'
