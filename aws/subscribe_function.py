@@ -91,15 +91,43 @@ def process_subscribe(body, email):
     # Generate timestamp
     now = datetime.utcnow().isoformat() + 'Z'
     
-    # Build subscriber item with required fields
-    item = {
-        'pk': {'S': 'user'},
-        'sk': {'S': email},
-        'date_created': {'S': now},
-        'status': {'S': STATUS_SUBSCRIBED}
-    }
+    # Check if subscriber already exists
+    existing_item = None
+    try:
+        # Validate environment
+        if not TABLE_NAME:
+            raise ValueError("DDB_NAME environment variable is not set")
+
+        existing = dynamodb.get_item(
+            TableName=TABLE_NAME,
+            Key={
+                'pk': {'S': 'user'},
+                'sk': {'S': email}
+            }
+        )
+        
+        if 'Item' in existing:
+            logger.info(f"Subscriber already exists, preserving existing data: {email}")
+            existing_item = existing['Item']
+            
+    except ClientError as e:
+        logger.error(f"Error checking for existing subscriber: {str(e)}")
+        # Continue with registration attempt
     
-    # Add optional fields if present
+    # Start with existing item (if any) or create new base item
+    if existing_item:
+        item = existing_item.copy()  # Preserve ALL existing data
+    else:
+        item = {
+            'pk': {'S': 'user'},
+            'sk': {'S': email},
+            'date_created': {'S': now}
+        }
+    
+    # Always update status to subscribed
+    item['status'] = {'S': STATUS_SUBSCRIBED}
+    
+    # Only update fields that are provided in the request (don't overwrite with empty values)
     if 'name' in body and body['name']:
         item['name'] = {'S': body['name'].strip()}
         
@@ -121,31 +149,7 @@ def process_subscribe(body, email):
             else:
                 item[field] = {'S': str(body[field])}
     
-    # Check if subscriber already exists
-    try:
-        # Validate environment
-        if not TABLE_NAME:
-            raise ValueError("DDB_NAME environment variable is not set")
-
-        existing = dynamodb.get_item(
-            TableName=TABLE_NAME,
-            Key={
-                'pk': {'S': 'user'},
-                'sk': {'S': email}
-            }
-        )
-        
-        if 'Item' in existing:
-            logger.info(f"Subscriber already exists, updating: {email}")
-            # Preserve the original date_created if it exists
-            if 'date_created' in existing['Item']:
-                item['date_created'] = existing['Item']['date_created']
-            
-    except ClientError as e:
-        logger.error(f"Error checking for existing subscriber: {str(e)}")
-        # Continue with registration attempt
-    
-    # Save to DynamoDB (creates new or overwrites existing)
+    # Save to DynamoDB (preserves all existing data)
     dynamodb.put_item(TableName=TABLE_NAME, Item=item)
     
     logger.info(f"Subscriber registered/updated: {email}")
