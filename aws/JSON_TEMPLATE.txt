@@ -1,0 +1,38 @@
+{
+  "title": "",
+  "summary": "",
+  "tags": [],
+  "category": "",
+  "take": "",
+  "url": ""
+}
+
+
+
+{
+  "title": "VG Out of Gas",
+  "summary": "U.S. natural gas futures rose 2% to $3.49/MMBtu in early July as hotter weather forecasts boosted A/C demand. Despite rising production and exports, the market remains well supplied, with inventory levels above seasonal averages.",
+  "tags": ["CNG", "VG", "Energy"],
+  "category": "Markets",
+  "take": "Building its 3rd US export facility further consolidates Venture Global's dominance as the leading US CNG exporter. Global LNG supply from Russia, Qatar and Iran are increasing. By 2030 many of VG's 20-year fixed contracts will expire and buyers will renegotiate under worse pricing conditions. With 100% of the export burden, VG bears 100% of the contract re-pricing risk.",
+  "url": "https://naturalgasintel.com/news/despite-demand-drivers-momentum-eludes-natural-gas-futures/?utm_source=chatgpt.com"
+}
+
+
+
+Full Model
+log(Chobani Sales) <-- is_Spring + is_Summer + is_Fall + log(Yoplait_Lag) + log(Private_Lag) + log(Chobani_Lag)
+Estimating the effect of:
+Seasonal dummies 
+logs of lagged own-brand and competitor prices 
+
+hypothesized lagged prices would better reflect consumer response timing, the drop in R² suggests Yoplait sales are more sensitive to current prices, not delayed reactions.
+
+Introducing logarithms actually DECREASED R²
+
+R² = 0.10 → This model explains only 10% of the variation in log sales.
+Suggests  key drivers are still unaccounted for — store level factors like Professor showed
+
+Key findings -- 
+* Strongest predictor: as Chobani’s lagged price increases, log sales drop sharply. Highly significant.
+* Significant drop in sales during fall compared to winter (the reference season).

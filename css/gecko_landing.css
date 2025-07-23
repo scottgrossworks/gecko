@@ -481,7 +481,20 @@ html, body {
     .links-row {
       width: 100%;
       margin: 0 auto;
-      font-size: 1.2em;
+      font-size: 1.1em;
+      gap: 0.8em; /* Reduced gap for mobile */
+      padding: 0 1em; /* Add horizontal padding to prevent edge collision */
+      box-sizing: border-box;
+      flex-wrap: wrap; /* Allow wrapping if needed */
+    }
+
+    .gecko-link {
+      font-size: 0.9em; /* Smaller links on mobile */
+      letter-spacing: 0.5px; /* Reduced letter spacing */
+    }
+
+    .divider {
+      font-size: 0.9em; /* Smaller dividers on mobile */
     }
   
   
