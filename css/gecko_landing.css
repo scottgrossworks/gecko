@@ -248,9 +248,9 @@ html, body {
   .subscribe-form input[type="email"] {
     padding: 0.7em 1em;
     border-radius: 4px;
-    border: 1px solid #888;
+    border: 1px solid #999;
     font-size: 1.2em;
-    background: #1a1a1a;
+    background: #111111;
     color: white;
     outline: none;
     width: 100%;
@@ -261,9 +261,9 @@ html, body {
   .subscribe-form input[type="text"] {
     padding: 0.7em 1em;
     border-radius: 4px;
-    border: 1px solid #888;
+    border: 1px solid #CCC;
     font-size: 1.2em;
-    background: #1a1a1a;
+    background: #111111;
     color: white;
     outline: none;
     width: 100%;
@@ -302,6 +302,30 @@ html, body {
     margin-bottom: 1em;
   }
 
+
+
+    #preview-btn {
+    margin:1em;
+    padding: 0.7em;
+    border-radius: 4px;
+    border: 2px solid #CCC;
+    background: #111;
+    color: #CCC;
+    font-size: 1.2em;
+    font-weight: bold;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    width: 100%;
+    max-width: 250px;
+    box-sizing: border-box;
+  }
+  
+  #preview-btn:hover {
+    background: white;
+    border: 2px solid white;
+    color: #111;
+  }
 
 
   .links-row {
@@ -355,7 +379,7 @@ html, body {
     padding: 20px;
     background: rgba(20,20,20,0.7);
     box-shadow: 0 0 10px #000a;
-    margin: 1em auto 2em auto;
+    margin: 0 auto 2em auto;
   }
   
   .faq-section a {
@@ -395,7 +419,7 @@ html, body {
     width: 90%;
     margin: 20px auto;
 
-    text-align: center;
+    text-align: left;
     color: #494949;
     background: transparent;
     font-size: 0.95em;
@@ -536,8 +560,15 @@ html, body {
       align-items: center;
       gap: 1em;
     }
-    .subscribe-form input[type="email"], .subscribe-form button {
+    .subscribe-form input[type="email"] {
       width: auto;
+      min-width: 250px;
+      max-width: 350px;
+    }
+    
+    .subscribe-form button {
+      width: auto;
+      min-width:200px;
       max-width: 350px;
     }
     .subscribe-form button {

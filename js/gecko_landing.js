@@ -55,6 +55,14 @@ setInterval(() => {
   images[idx].classList.add('active');
 }, 2000);
 
+
+// --- Preview Button ---
+document.getElementById('preview-btn').addEventListener('click', function() {
+  const previewUrl = 'https://unha4lumv1.execute-api.us-west-2.amazonaws.com/prod/web';
+  window.open(previewUrl, '_blank');
+});
+
+
 // --- Subscribe Form ---
 document.getElementById('subscribe-form').addEventListener('submit', async function(e) {
   e.preventDefault();
