@@ -48,6 +48,7 @@ SLEEP_TIME = float(os.environ.get('SLEEP_TIME', '1.0'))  # Sleep time in seconds
 EMAIL_SOURCE = os.environ.get('EMAIL_SOURCE')
 EMAIL_TARGET = os.environ.get('EMAIL_TARGET')
 EMAIL_SUBJECT = os.environ.get('EMAIL_SUBJECT')
+EMAIL_SUBSCRIBE = os.environ.get('EMAIL_SUBSCRIBE')
 
 LIBRARY_LINK = os.environ.get('LIBRARY_LINK')
 FAQ_LINK = os.environ.get('FAQ_LINK')
@@ -235,11 +236,10 @@ def get_and_update_stories(count=3):
         raise
 
 
-##
-## Get stories without updating their status (for preview mode)
-##
-def get_stories_without_update(count=3):
-    """
+
+
+
+"""
     Fetch top stories from DynamoDB without updating their status
     
     Args:
@@ -247,36 +247,32 @@ def get_stories_without_update(count=3):
         
     Returns:
         list: List of story items in DynamoDB format
-    """
+"""
+def get_stories_without_update(count=3):
+   
     try:
-        # Query for top stories with status "queued"
+        # Query for most recently published stories (newest first for preview)
         response = dynamodb.query(
             TableName=TABLE_NAME,
-            IndexName=GSI_NAME,
+            IndexName='status-index',  # Use GSI to filter by status
             KeyConditionExpression='#status = :status',
             ExpressionAttributeNames={'#status': 'status'},
-            ExpressionAttributeValues={':status': {'S': 'queued'}},
-            ScanIndexForward=True,  # Ascending order by date (FIFO - oldest first)
+            ExpressionAttributeValues={':status': {'S': 'published'}},
+            ScanIndexForward=False,  # Descending order by date (newest first)
             Limit=count
         )
         
         stories = response.get('Items', [])
         
         if not stories:
-            logger.warning("No queued stories found in DynamoDB")
-            return []
-        
-
-        
-        # Ensure we only process the requested count
-        stories = stories[:count]
-        logger.info(f"Found {len(stories)} stories for preview (requested: {count})")
-        
+            logger.warning("No published stories found in DynamoDB")
+            
         return stories
         
     except ClientError as e:
         logger.error(f"Error fetching stories: {str(e)}")
         raise
+
 
 
 ##
@@ -710,7 +706,7 @@ def lambda_handler(event, context):
         # 2. Render the email version with appropriate link
         if preview_mode:
             # Use subscribe link for preview
-            gecko_subscribe_email = "gekko.subscribe@scottgross.works"
+            gecko_subscribe_email = EMAIL_SUBSCRIBE
             email_content = render_email_version_with_subscribe(stories, gecko_subscribe_email)
             subject = os.environ.get('EMAIL_SUBJECT', "Gekko's Birthday * Preview")
         elif single_shot_mode:

@@ -212,20 +212,21 @@ def render_web_version( stories ):
 def get_stories_without_update(count=3):
    
     try:
-        # Query for top stories with no published_date
+        # Query for most recently published stories (newest first for preview)
         response = dynamodb.query(
             TableName=TABLE_NAME,
-            KeyConditionExpression='#pk = :pk',
-            ExpressionAttributeNames={'#pk': 'pk'},
-            ExpressionAttributeValues={':pk': {'S': 'story'}},
-            ScanIndexForward=True,  # Ascending order by sort key (FIFO)
+            IndexName='status-index',  # Use GSI to filter by status
+            KeyConditionExpression='#status = :status',
+            ExpressionAttributeNames={'#status': 'status'},
+            ExpressionAttributeValues={':status': {'S': 'published'}},
+            ScanIndexForward=False,  # Descending order by date (newest first)
             Limit=count
         )
         
         stories = response.get('Items', [])
         
         if not stories:
-            logger.warning("No stories found in DynamoDB")
+            logger.warning("No published stories found in DynamoDB")
             
         return stories
         
