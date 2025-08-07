@@ -43,6 +43,16 @@ def post_to_x(story_data):
         print(f"Failed to invoke {x_poster_function}: {str(e)}")
         raise
 
+
+
+
+'''
+Receive email with JSON-formatted story 
+save to DDB
+post to X
+return 200 success
+
+'''
 def lambda_handler(event, context):
     try:
         # print(f"START - Event: {json.dumps(event)}")
@@ -63,7 +73,7 @@ def lambda_handler(event, context):
             if not email_bucket:
                 raise ValueError("EMAIL_BUCKET environment variable is not set")
 
-            # print(f"Using email bucket: {email_bucket}")
+            #print(f"Using email bucket: {email_bucket}")
             
             try:
                 response = s3.get_object(Bucket=email_bucket, Key=message_id)
@@ -71,8 +81,9 @@ def lambda_handler(event, context):
                 email_msg = BytesParser(policy=policy.default).parsebytes(raw_email)
                 body_text = email_msg.get_body(preferencelist=("plain")).get_content().strip()
                 #print(f"Retrieved email from S3: {len(body_text)} chars")
+            
             except Exception as e:
-                #print(f"S3 access failed: {str(e)}")
+                print(f"S3 access failed: {str(e)}")
                 # Extract content from SES event headers if available
                 ses_mail = record['ses']['mail']
                 subject = ses_mail['commonHeaders']['subject']
@@ -99,20 +110,26 @@ def lambda_handler(event, context):
             body_text = email_msg.get_body(preferencelist=("plain")).get_content().strip()
             
         else:
+            print(f"Unknown event type: {record.get('eventSource', 'unknown')}")
             raise ValueError(f"Unknown event type: {record.get('eventSource', 'unknown')}")
             
         # print(f"Body length: {len(body_text)}")
         
         if not body_text:
+            print("No text content found in email")
             raise ValueError("No text content found in email")
         
         start = body_text.find('{')
         end = body_text.rfind('}') + 1
         if start == -1 or end <= start:
+            print("No valid JSON object found")
             raise ValueError("No valid JSON object found")
         
         json_str = body_text[start:end].replace('\r\n', ' ').replace('\n', ' ').strip()
-        # print(f"JSON: {json_str}")
+        
+        
+        #print(f"JSON: {json_str}")
+        
         payload = json.loads(json_str)
         now = datetime.utcnow().isoformat() + 'Z'
         pk = 'story' if payload.get('summary') and payload.get('tags') else 'lead'
@@ -122,9 +139,12 @@ def lambda_handler(event, context):
         summary = payload.get('summary', '')
         take = payload.get('take', '')
         url = payload.get('url', '')
-        # print(f"Fields: title={title}, category={category}")
+        
+        
+        #print(f"Fields: title={title}, category={category}")
         
         if not (title and url and category and summary and take):
+            print("Missing required fields: title, url, category, summary, take")
             raise ValueError("Missing required fields: title, url, category, summary, take")
         
         item = {
@@ -142,9 +162,9 @@ def lambda_handler(event, context):
         }
         
         dynamodb.put_item(TableName=TABLE_NAME, Item=item)
-        print("SUCCESS - Item written to DDB: {TABLE_NAME}")
+        print(f"SUCCESS - Item written to DDB: {TABLE_NAME}")
         
-        # Post to X if it's a story (not a lead)
+        # Post to X if it's a story 
         if pk == 'story':
             try:
                 post_to_x({
@@ -154,7 +174,7 @@ def lambda_handler(event, context):
                     'category': category,
                     'summary': summary
                 })
-                print("X posting initiated")
+                # print("X posting initiated")
             except Exception as x_error:
                 print(f"X posting failed (non-fatal): {str(x_error)}")
                 # Don't fail the whole function if X posting fails
@@ -162,12 +182,16 @@ def lambda_handler(event, context):
         return {'statusCode': 200, 'body': f"Story added to '{pk}' queue: {title}"}
     
     except ClientError as e:
+        print(f"AWS Error: {str(e)}")
         return {'statusCode': 500, 'body': f"AWS Error: {str(e)}"}
     except ValueError as e:
+        print(f"Validation Error: {str(e)}")
         return {'statusCode': 400, 'body': f"Validation Error: {str(e)}"}
     except json.JSONDecodeError as e:
+        print(f"JSON Error: {str(e)}")
         return {'statusCode': 400, 'body': f"JSON Error: {str(e)}"}
     except Exception as e:
+        print(f"Unexpected Error: {str(e)}")
         return {'statusCode': 500, 'body': f"Unexpected Error: {str(e)}"}
 
 # EOF gecko_story_create.py

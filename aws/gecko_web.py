@@ -192,7 +192,7 @@ def render_web_version( stories ):
     <tr><td bgcolor='black'><font style='font-family:Helvetica, sans-serif; letter-spacing:1.25px;'>{stories_html}</font>"
     
     footer_html = f"<hr color='white' size='1' style='border:none;border-top:1px solid white;margin:20px 0;'><div align='center' style='color:chartreuse;font-size:12px;text-align:center;margin-top:30px;'>&copy; {datetime.now().year} GEKKO'S BIRTHDAY Newsletter, produced by \
-        <a href='http://scottgross.works'>Scott Gross</a>. All rights reserved.<BR><BR>{web_link}<BR></div></td></tr></table></td></tr></table><BR></body></html>"
+        <a href='http://scottgross.works' style='color:red'>Scott Gross</a>. All rights reserved.<BR><BR>{web_link}<BR></div></td></tr></table></td></tr></table><BR></body></html>"
     
     final_html = top_html + body_html + footer_html
     

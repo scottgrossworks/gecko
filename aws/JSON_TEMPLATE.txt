@@ -8,31 +8,39 @@
 }
 
 
+https://venturebeat.com/ai/new-ai-architecture-delivers-100x-faster-reasoning-than-llms-with-just-1000-training-examples/
+
+
+
+
+Hi Nicholas,
+
+I was the cartoonist at the company picninc.  It was a pleasure meeting you and your family, and learning about Castelion.  I was particularly impressed by your CEO's candor and sense of purpose.  It felt good to be amongst people with a shared mission and esprit de corps.  I'd be eager to learn more about what I could do for a company like yours.  I'm completing my MBA at UCI with a focus on Ai, competitive analytics, and data-driven management.  I have a degree in CS from Columbia and an enthusiasm for hacking, tinkering and wearing many hats.  I can even draw.  Can we talk more?
+
+I sent you a preview of my newsletter Gekko's Birthday -- news and insights that can change your life:  scottgross.works/gekko
+
+Let's connect!
++scottgross.works
 
 {
-  "title": "VG Out of Gas",
-  "summary": "U.S. natural gas futures rose 2% to $3.49/MMBtu in early July as hotter weather forecasts boosted A/C demand. Despite rising production and exports, the market remains well supplied, with inventory levels above seasonal averages.",
-  "tags": ["CNG", "VG", "Energy"],
-  "category": "Markets",
-  "take": "Building its 3rd US export facility further consolidates Venture Global's dominance as the leading US CNG exporter. Global LNG supply from Russia, Qatar and Iran are increasing. By 2030 many of VG's 20-year fixed contracts will expire and buyers will renegotiate under worse pricing conditions. With 100% of the export burden, VG bears 100% of the contract re-pricing risk.",
-  "url": "https://naturalgasintel.com/news/despite-demand-drivers-momentum-eludes-natural-gas-futures/?utm_source=chatgpt.com"
+  "title": "Castelion Disrupts Defense",
+  "summary": "Castelion, a Torrance-based defense startup founded by former SpaceX executives, is raising a $350 million Series B round to scale production of hypersonic missiles. The company has secured DoD support for development of Blackbeard Ground Launch (GL) — an “affordable, mass-produced” hypersonic weapon designed to deliver around 80% of the capability of current long-range systems at lower cost.",
+  "tags": ["Castelion", "hypersonic", "SpaceX", "Series B", "defense", "manufacturing"],
+  "category": "Warfare",
+  "take": "Castelion's founders bring fast iteration, frequent testing, lean production and vertical integration into a defense sector traditionally dominated by slow, risk-averse legacy primes. Long, capital-intensive dev cycles and fragmented supply chains also hamstring shipbuilding, commercial airplanes, heavy equipment and especially home building. Just as SpaceX dethroned Boeing/Lockheed in space launch and Tesla disrupted autos, Castelion's model hints at a broader manufacturing realignment.",
+  "url": "https://techcrunch.com/2025/07/03/castelion-raises-350m-series-b-to-scale-hypersonic-missile-business/"
 }
 
 
+If AI flattens the org chart and squeezes out middle-management, then why get an MBA?  Will employers value strategic frameworks and management skills when teams manage themselves with AI support?  Instead of case study theater, business schools must refocus on data fluency, AI literacy and tooling, and training students to act (and ship) as independent operators.
+ 
 
-Full Model
-log(Chobani Sales) <-- is_Spring + is_Summer + is_Fall + log(Yoplait_Lag) + log(Private_Lag) + log(Chobani_Lag)
-Estimating the effect of:
-Seasonal dummies 
-logs of lagged own-brand and competitor prices 
 
-hypothesized lagged prices would better reflect consumer response timing, the drop in R² suggests Yoplait sales are more sensitive to current prices, not delayed reactions.
-
-Introducing logarithms actually DECREASED R²
-
-R² = 0.10 → This model explains only 10% of the variation in log sales.
-Suggests  key drivers are still unaccounted for — store level factors like Professor showed
-
-Key findings -- 
-* Strongest predictor: as Chobani’s lagged price increases, log sales drop sharply. Highly significant.
-* Significant drop in sales during fall compared to winter (the reference season).
+{
+  "title": "AI Kills Middle Management",
+  "summary": "As AI automates information routing, decision tracking, and task coordination, the traditional role of middle management becomes obsolete. At Fireflies.ai, a flat hierarchy powered by AI enables individual contributors to act with executive-level autonomy. Employees use AI to detect patterns, propose product changes, and adjust strategy without managerial oversight. The 'flat' org chart of the future will empower workers to be their own 'mini-CEOs' operating at the speed of AI.",
+  "category": "MBA",
+  "tags": ["AI", "MBA"],
+  "take": "Why get an MBA?  Will employers value strategic frameworks and management skills when teams manage themselves with AI support?  Instead of case study theater, business schools must refocus on data fluency, AI literacy and tooling, project-based work, and training students to act (and ship) as independent operators.",
+  "url": "https://www.fastcompany.com/91377552/middle-management-is-dead"
+}

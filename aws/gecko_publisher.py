@@ -61,6 +61,12 @@ UNSUBSCRIBE_BODY = (
     "Please unsubscribe me from Gecko's Birthday."
     )
 
+# Create subscribe link instead of unsubscribe
+SUBSCRIBE_BODY = (
+    "I want news and insights at the intersection of business, technology, and culture. "
+    "Like Bud Fox in Wall Street, start my day with the information that can change my life. "
+    "Sign me up for the Gekko's Birthday Newsletter!"
+    )
         
 # CORS headers for all responses
 CORS_HEADERS = {
@@ -308,6 +314,124 @@ def send_single_email(email, email_content, subject):
         return False
 
 
+
+
+##
+## Render a refresh newsletter
+## this version:  has a plaintext intro BEFORE the header_html with an refresh msg
+## personalized link to Email <mailto:scottgrossworks@gmail.com>Scott Gross</a>
+## THe intro is white background, same as default
+## 50px margin 
+## then the standard email content generted by render_email_version
+##
+## refresh text:
+## Dear friend, 
+## I noticed you didn't Subscibe to Gekko's Birthday from the preview I sent you.
+## <BR>
+## I also notice you didn't get rich like me, Gordon Gekko.  
+## I'm talking talking *liquid*.  Rich enough to have your own jet.
+## Rich enough not to waste time.
+## $50, $100 million dollars, buddy.  A player.
+## <BR>
+## So, I'm sending you another chance to subscribe to the news and insights that
+## could change your life.
+## <BR>
+## To get in touch, Email my friend <mailto:scottgrossworks@gmail.com>Scott Gross</a>
+## 
+
+
+
+
+##
+##
+##
+
+
+"""
+Render refresh newsletter with white background intro and standard email content
+
+Args:
+    stories (list): List of story items
+    gecko_unsub (str): Unsubscribe email address
+    
+Returns:
+    str: Complete HTML email content with refresh intro
+"""
+##
+## Render the refresh newsletter version
+## White background intro with Gekko-style follow-up message, then standard content
+##
+def render_refresh_version(stories):
+
+    # GET STANDARD HEADER HTML SAME FOR ALL VERSIONS
+    header_html = getHeaderAscii()
+
+    # Properly encode the body for mailto link
+    body_text = SUBSCRIBE_BODY.replace('\n', ' ').replace('"', '%22')
+    body_encoded = urllib.parse.quote(body_text, safe='')
+    
+    mailto_subscribe = (
+        f"<a style='color:chartreuse;font-weight:600;font-size:1.1em;' href='mailto:{EMAIL_SUBSCRIBE}"
+        f"?subject={urllib.parse.quote('Subscribe to Gekko\'s Birthday')}"
+        f"&body={body_encoded}'>Subscribe</a>"
+    )
+
+    # White background refresh intro with exact text and formatting
+    refresh_intro = (
+        "<div style='background-color: white; color: black; padding: 20px; margin: 10px 0; font-family: Helvetica, sans-serif; font-size: 14px; line-height: 1.4;'>"
+        "Dear friend,<BR><BR>"
+        "I noticed you didn't Subscribe to Gekko's Birthday from the preview I sent you.&nbsp;&nbsp;"
+        "I also notice you didn't get rich like me, Gordon Gekko.&nbsp;&nbsp;"
+        "I'm talking talking *liquid*. Rich enough to have your own jet.&nbsp;&nbsp;"
+        "Rich enough not to waste time.&nbsp;&nbsp;"
+        "$50, $100 million dollars, buddy. A player.<BR><BR>"
+        "So, I'm sending you another chance to " + mailto_subscribe + " to the news and insights that "
+        "could change your life.<BR><BR>"
+        "To get in touch, Email my friend <a href='mailto:scottgrossworks@gmail.com' style='color: blue; text-decoration: underline;'>Scott Gross</a>"
+        "</div>"
+    )
+
+
+    sub_html = render_links(mailto_subscribe)
+
+    header_html += sub_html
+
+    # RENDER THE STORIES AS HTML STRING
+    stories_html = render_stories(stories)
+
+    ## COMPOSE THE COMPLETE HTML WITH REFRESH INTRO
+    top_html = f"<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Gekko's Birthday - Second Chance</title><style>body,html{{background-color:black;color:white;margin:0;padding:0;font-family:'Tahoma',monospace;}}</style></head>"
+    
+    # Body HTML with refresh intro inserted before the standard content
+    body_html = f"<body bgcolor='black' text='white' link='white' alink='white' style='background-color:black;color:white;margin:0;padding:0;font-family:'Verdana',monospace;'>{refresh_intro}<BR><BR> \
+    <table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black'><tr><td align='center'><table width='600' border='0' cellspacing='0' cellpadding='20' bgcolor='black'> \
+    <tr><td bgcolor='black' style='padding:15px;'><table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black' style='font-family:'Tahoma',monospace;'>{header_html}</table><BR><div style='margin:0 15px;'><font style='font-family:Helvetica, sans-serif; letter-spacing:1.25px;'>{stories_html}</font></div>"
+    
+    footer_html = f"<hr color='white' size='1' style='border:none;border-top:1px solid white;margin:20px 0;'><div align='center' style='color:chartreuse;font-size:12px;text-align:center;margin-top:20px;'>&copy; {datetime.now().year} GEKKO'S BIRTHDAY Newsletter, \
+    produced by <a href='http://scottgross.works' style='color:red'>Scott Gross</a>. All rights reserved.<BR>{mailto_subscribe}<BR></div></td></tr></table></td></tr></table><BR></body></html>"
+    
+    final_html = top_html + body_html + footer_html
+
+    # DEBUG: 
+    # logger.info(f"DEBUG: final_html = {final_html}")
+
+
+    return final_html
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ##
 ## Render the email version of the newsletter
 ##
@@ -331,9 +455,6 @@ def render_email_version( stories, gecko_unsub ):
 
     header_html += sub_html
 
-    footer_html = f"<br>{mailto_unsub}"
-
-
     # RENDER THE STORIES AS HTML STRING
     stories_html = render_stories(stories)
 
@@ -347,7 +468,7 @@ def render_email_version( stories, gecko_unsub ):
     <tr><td bgcolor='black' style='padding:15px;'><table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black' style='font-family:'Tahoma',monospace;'>{header_html}</table><BR><div style='margin:0 15px;'><font style='font-family:Helvetica, sans-serif; letter-spacing:1.25px;'>{stories_html}</font></div>"
     
     footer_html = f"<hr color='white' size='1' style='border:none;border-top:1px solid white;margin:20px 0;'><div align='center' style='color:chartreuse;font-size:12px;text-align:center;margin-top:20px;'>&copy; {datetime.now().year} GEKKO'S BIRTHDAY Newsletter, \
-    produced by <a href='http://scottgross.works'>Scott Gross</a>. All rights reserved.<BR>{mailto_unsub}<BR></div></td></tr></table></td></tr></table><BR></body></html>"
+    produced by <a href='http://scottgross.works' style='color:red'>Scott Gross</a>. All rights reserved.<BR>{mailto_unsub}<BR></div></td></tr></table></td></tr></table><BR></body></html>"
     
     final_html = top_html + body_html + footer_html
     
@@ -372,14 +493,9 @@ def render_email_version_with_subscribe(stories, gecko_subscribe):
     header_html = getHeaderAscii()
 
     # Create subscribe link instead of unsubscribe
-    subscribe_body = (
-        "I want news and insights at the intersection of business, technology, and culture. "
-        "Like Bud Fox in Wall Street, start my day with the information that can change my life. "
-        "Sign me up for the Gekko's Birthday Newsletter!"
-    )
     
     # Properly encode the body for mailto link
-    body_text = subscribe_body.replace('\n', ' ').replace('"', '%22')
+    body_text = SUBSCRIBE_BODY.replace('\n', ' ').replace('"', '%22')
     body_encoded = urllib.parse.quote(body_text, safe='')
     
     mailto_subscribe = (
@@ -390,7 +506,6 @@ def render_email_version_with_subscribe(stories, gecko_subscribe):
 
     sub_html = render_links(mailto_subscribe)
     header_html += sub_html
-    footer_html = f"<br>{mailto_subscribe}"
 
     # RENDER THE STORIES AS HTML STRING
     stories_html = render_stories(stories)
@@ -403,7 +518,7 @@ def render_email_version_with_subscribe(stories, gecko_subscribe):
     <tr><td bgcolor='black' style='padding:15px;'><table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black' style='font-family:'Tahoma',monospace;'>{header_html}</table><BR><div style='margin:0 15px;'><font style='font-family:Helvetica, sans-serif; letter-spacing:1.25px;'>{stories_html}</font></div>"
     
     footer_html = f"<hr color='white' size='1' style='border:none;border-top:1px solid white;margin:20px 0;'><div align='center' style='color:chartreuse;font-size:12px;text-align:center;margin-top:20px;'>&copy; {datetime.now().year} GEKKO'S BIRTHDAY Newsletter, \
-    produced by <a href='http://scottgross.works'>Scott Gross</a>. All rights reserved.<BR>{mailto_subscribe}<BR></div></td></tr></table></td></tr></table><BR></body></html>"
+    produced by <a href='http://scottgross.works' style='color:red'>Scott Gross</a>. All rights reserved.<BR>{mailto_subscribe}<BR></div></td></tr></table></td></tr></table><BR></body></html>"
     
     final_html = top_html + body_html + footer_html
     
@@ -448,6 +563,92 @@ def render_stories(stories):
     except Exception as e:
         logger.error(f"Error invoking {RENDER_FUNCTION} Lambda: {str(e)}")
         raise
+
+
+##
+##
+##
+def get_non_subscribers():
+    """
+    Fetch all non-subscribers with status=null (not subscribed, not unsubscribed) 
+    from DynamoDB
+    Uses the status-index GSI to efficiently query instead of scanning
+
+    Returns:
+        list: List of non-subscriber items
+    """
+    try:
+        non_subscribers = []
+        paginator = dynamodb.get_paginator('query')
+
+        # Parameters for querying the status-index GSI
+        query_params = {
+            'TableName': TABLE_NAME,
+            'IndexName': GSI_NAME,
+            'KeyConditionExpression': '#status = :status',
+            'FilterExpression': '#pk = :pk',
+            'ExpressionAttributeNames': {'#status': 'status', '#pk': 'pk'},
+            'ExpressionAttributeValues': {
+                ':status': {'S': 'null'},
+                ':pk': {'S': 'user'}
+            }
+        }
+
+        # Paginate through results
+        for page in paginator.paginate(**query_params):
+            non_subscribers.extend(page.get('Items', []))
+
+        logger.info(f"Found {len(non_subscribers)} non-subscribed users using GSI: {GSI_NAME}")
+        return non_subscribers
+
+    except ClientError as e:
+        logger.error(f"Error fetching non-subscribers: {str(e)}")
+        raise
+
+
+##
+## so we don't annoy people with the refresh -- 
+## this allows us to mark them once as refreshed
+## will *not* get picked up by get_non_subscribers() above
+##
+def mark_refreshed( non_subscribers ):
+    """
+    Mark non-subscribers as refreshed in DynamoDB by updating their status to 'refreshed'
+    
+    Args:
+        non_subscribers (list): List of non-subscriber items to update
+        
+    Returns:
+        int: Number of items updated
+    """
+    try:
+        if not non_subscribers:
+            logger.info("No non-subscribers to mark as refreshed")
+            return 0
+        
+        batch_items = []
+        for subscriber in non_subscribers:
+            # Create a copy of the subscriber with updated status
+            updated_subscriber = subscriber.copy()
+            updated_subscriber['status'] = {'S': 'refreshed'}
+            
+            # Add to batch write request
+            batch_items.append({'PutRequest': {'Item': updated_subscriber}})
+        
+        # Write back to DynamoDB
+        if batch_items:
+            dynamodb.batch_write_item(RequestItems={TABLE_NAME: batch_items})
+            logger.info(f"Marked {len(batch_items)} non-subscribers as refreshed")
+            return len(batch_items)
+        else:
+            logger.info("No items to update in batch write")
+            return 0
+            
+    except ClientError as e:
+        logger.error(f"Error marking non-subscribers as refreshed: {str(e)}")
+        raise   
+
+
 
 
 
@@ -615,6 +816,9 @@ def lambda_handler(event, context):
     # Log all incoming requests for debugging
     logger.info(f"Incoming request - Method: {event.get('httpMethod')}, Path: {event.get('path')}, QueryParams: {event.get('queryStringParameters')}")
 
+    test_email = None
+    refresh_mode = False
+
     # Handle preflight OPTIONS request
     if event.get('httpMethod') == 'OPTIONS':
         return {
@@ -630,16 +834,44 @@ def lambda_handler(event, context):
             request_data = json.loads(event['body'])
         except json.JSONDecodeError:
             request_data = event
+
+
+    ##
+    ## IS THIS A TEST EVENT?
+    ##
     elif event.get('queryStringParameters'):
+        
+         ## DETECT REFRESH MODE WITH EMAIL PARAMETER HERE
         request_data = event.get('queryStringParameters', {})
-    
+        
+        # Check for refresh mode with email parameter in test event
+        if request_data.get('refresh') == 'true' and request_data.get('email'):
+            refresh_mode = True
+            test_email = request_data.get('email')
+            logger.info(f"Refresh test mode detected with email: {test_email}")
+            if not test_email:
+                return {
+                    'statusCode': 400,
+                    'body': json.dumps({"message": "Missing email parameter for refresh test mode"}),
+                    'headers': CORS_HEADERS
+                }
+
+
+
+
+
     # Determine mode: preview, single_shot, or broadcast (default)
+    refresh_mode = refresh_mode or (request_data.get('refresh') == 'true')
     preview_mode = request_data.get('preview_mode') == 'true'
     single_shot_mode = request_data.get('email') and not preview_mode  # Has email but not preview
     single_shot_email = request_data.get('email') if single_shot_mode else None
     preview_email = request_data.get('email') if preview_mode else None
     
-    if preview_mode:
+    if refresh_mode:
+        logger.info("Refresh mode activated")
+        preview_mode = True  # Refresh mode acts like preview mode !! YES !!
+
+    elif preview_mode:
         logger.info(f"Preview mode activated for: {preview_email}")
         if not preview_email:
             return {
@@ -676,10 +908,12 @@ def lambda_handler(event, context):
                 'body': json.dumps({"message": "Invalid trigger source or secret key"}),
                 'headers': CORS_HEADERS
             }
+        
+    
 
     try:
         # 1. Get stories (update status only in broadcast mode)
-        if preview_mode or single_shot_mode:
+        if refresh_mode or preview_mode or single_shot_mode:
             stories = get_stories_without_update(count=3)
         else:
             stories = get_and_update_stories(count=3)
@@ -704,7 +938,14 @@ def lambda_handler(event, context):
                 }
         
         # 2. Render the email version with appropriate link
-        if preview_mode:
+        if refresh_mode:
+            # Use refresh version with subscribe link
+            email_content = render_refresh_version(stories)
+            subject = "Lunch is for Wimps - 2nd Chance to Subscribe"
+            gecko_link = EMAIL_SUBSCRIBE
+         
+        
+        elif preview_mode:
             # Use subscribe link for preview
             gecko_subscribe_email = EMAIL_SUBSCRIBE
             email_content = render_email_version_with_subscribe(stories, gecko_subscribe_email)
@@ -730,8 +971,57 @@ def lambda_handler(event, context):
             subject_snippet = extract_subject_snippet(title_str, num_words=5)
             subject = subject_snippet
         
+
+
         # 3. Send emails
-        if preview_mode:
+        if refresh_mode:
+            # Check if this is a test mode (has email parameter)
+
+            # test_email WILL be set here if coming from test event
+            if test_email:
+                # TEST MODE: Send single-shot email for refresh testing
+                success = send_single_email(test_email, email_content, subject)
+            
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps({
+                        "message": f"Refresh newsletter TEST sent to {test_email}",
+                        "stories_count": len(stories),
+                        "mode": "refresh_test"
+                    }),
+                    'headers': CORS_HEADERS
+                }
+            
+
+            else:
+                # PRODUCTION MODE: Send to all non-subscribers (broadcast mode)
+                subscribers = get_non_subscribers()
+                if not subscribers:
+                    return {
+                        'statusCode': 404,
+                        'body': json.dumps({"message": "No non-subscribed users found"}),
+                        'headers': CORS_HEADERS
+                    }
+                else:
+                    # Mark non-subscribers as refreshed
+                    mark_refreshed(subscribers)
+                    logger.info(f"Marked {len(subscribers)} non-subscribers as refreshed")
+
+
+                sent_count = send_emails_to_subscribers(subscribers, email_content, subject)
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps({
+                        "message": f"Newsletter sent to {sent_count} non-subscribers",
+                        "stories_count": len(stories),
+                        "recipients_count": len(subscribers),
+                    }),
+                    'headers': CORS_HEADERS
+                }
+        
+
+
+        elif preview_mode:
             # Send single preview email
             success = send_single_email(preview_email, email_content, subject)
             return {
