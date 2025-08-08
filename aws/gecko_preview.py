@@ -58,8 +58,8 @@ def create_preview_user(email, name=None, zip_code=None, interests=None):
             item = {
                 'pk': {'S': 'user'},
                 'sk': {'S': email},
-                'date_created': {'S': now}
-                # Note: No 'status' field = null status (preview user)
+                'date_created': {'S': now},
+                'status': {'S': 'new'}  # EXPLICITLY SET STATUS TO 'new'                
             }
             
     except ClientError as e:
@@ -68,9 +68,15 @@ def create_preview_user(email, name=None, zip_code=None, interests=None):
         item = {
             'pk': {'S': 'user'},
             'sk': {'S': email},
-            'date_created': {'S': now}
+            'date_created': {'S': now},
+            'status': {'S': 'new'}  # EXPLICITLY SET STATUS TO 'new'
         }
     
+    # ENSURE STATUS IS SET FOR EXISTING USERS TOO
+    if 'status' not in item:
+        item['status'] = {'S': 'new'}
+        logger.info(f"Setting missing status field to 'new' for existing user: {email}")
+
     # Update ONLY the fields provided in this request (don't obliterate others)
     if name and name.strip():
         item['name'] = {'S': name.strip()}

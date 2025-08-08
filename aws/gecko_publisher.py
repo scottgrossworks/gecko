@@ -46,7 +46,7 @@ BATCH_SIZE = int(os.environ.get('BATCH_SIZE', '10'))  # Number of emails before 
 SLEEP_TIME = float(os.environ.get('SLEEP_TIME', '1.0'))  # Sleep time in seconds
 
 EMAIL_SOURCE = os.environ.get('EMAIL_SOURCE')
-EMAIL_TARGET = os.environ.get('EMAIL_TARGET')
+EMAIL_UNSUB = os.environ.get('EMAIL_UNSUB')
 EMAIL_SUBJECT = os.environ.get('EMAIL_SUBJECT')
 EMAIL_SUBSCRIBE = os.environ.get('EMAIL_SUBSCRIBE')
 
@@ -387,7 +387,7 @@ def render_refresh_version(stories):
         "$50, $100 million dollars, buddy. A player.<BR><BR>"
         "So, I'm sending you another chance to " + mailto_subscribe + " to the news and insights that "
         "could change your life.<BR><BR>"
-        "To get in touch, Email my friend <a href='mailto:scottgrossworks@gmail.com' style='color: blue; text-decoration: underline;'>Scott Gross</a>"
+        "To get in touch, email my friend <a href='mailto:scottgrossworks@gmail.com' style='color: blue; text-decoration: underline;'>Scott Gross</a>"
         "</div>"
     )
 
@@ -478,7 +478,7 @@ def render_email_version( stories, gecko_unsub ):
 ##
 ## Render the email version with subscribe link (for preview mode)
 ##
-def render_email_version_with_subscribe(stories, gecko_subscribe):
+def render_email_version_with_subscribe(stories, gecko_subscribe, intro=None):
     """
     Render email version with subscribe link instead of unsubscribe
     
@@ -492,8 +492,6 @@ def render_email_version_with_subscribe(stories, gecko_subscribe):
     # GET STANDARD HEADER HTML SAME FOR ALL VERSIONS
     header_html = getHeaderAscii()
 
-    # Create subscribe link instead of unsubscribe
-    
     # Properly encode the body for mailto link
     body_text = SUBSCRIBE_BODY.replace('\n', ' ').replace('"', '%22')
     body_encoded = urllib.parse.quote(body_text, safe='')
@@ -504,8 +502,29 @@ def render_email_version_with_subscribe(stories, gecko_subscribe):
         f"&body={body_encoded}'>Subscribe</a>"
     )
 
+
+
+    # INTRO TEXT
+    # If intro is provided, it will be added as a white background section
+    # This allows for a personalized message before the main content
+    # If no intro is provided, it will be an empty string
+    # If intro is provided, add it as a white background section
+    intro_html = ""
+    if intro:
+        intro_html = (
+            f"<div style='background-color: white; color: black; padding: 20px; margin: 10px 0; font-family: Helvetica, sans-serif; font-size: 14px; line-height: 1.4;'>"
+            f"{intro}<BR>{mailto_subscribe} to the news and insights that could change your life.<BR><BR>"
+        f"To get in touch, email my friend <a href='mailto:scottgrossworks@gmail.com' style='color:red; text-decoration: underline;'>Scott Gross</a>"
+        "</div>"
+        )
+
+
+
     sub_html = render_links(mailto_subscribe)
     header_html += sub_html
+
+    # Create subscribe link instead of unsubscribe
+
 
     # RENDER THE STORIES AS HTML STRING
     stories_html = render_stories(stories)
@@ -513,7 +532,7 @@ def render_email_version_with_subscribe(stories, gecko_subscribe):
     ## COMPOSE THE COMPLETE HTML
     top_html = f"<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Gekko's Birthday</title><style>body,html{{background-color:black;color:white;margin:0;padding:0;font-family:'Tahoma',monospace;}}</style></head>"
     
-    body_html = f"<body bgcolor='black' text='white' link='white' alink='white' style='background-color:black;color:white;margin:0;padding:0;font-family:'Verdana',monospace;'><BR><BR> \
+    body_html = f"<body bgcolor='black' text='white' link='white' alink='white' style='background-color:black;color:white;margin:0;padding:0;font-family:'Verdana',monospace;'>{intro_html}<BR><BR> \
     <table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black'><tr><td align='center'><table width='600' border='0' cellspacing='0' cellpadding='20' bgcolor='black'> \
     <tr><td bgcolor='black' style='padding:15px;'><table width='100%' border='0' cellspacing='0' cellpadding='0' bgcolor='black' style='font-family:'Tahoma',monospace;'>{header_html}</table><BR><div style='margin:0 15px;'><font style='font-family:Helvetica, sans-serif; letter-spacing:1.25px;'>{stories_html}</font></div>"
     
@@ -535,8 +554,7 @@ def render_stories(stories):
                 'stories': stories,
             }
             
-            logger.info(f"Invoking {RENDER_FUNCTION} Lambda")
-            
+            # logger.info(f"Invoking {RENDER_FUNCTION} Lambda")
             # Invoke the render_email Lambda synchronously
             response = lambda_client.invoke(
                 FunctionName=RENDER_FUNCTION,
@@ -589,7 +607,7 @@ def get_non_subscribers():
             'FilterExpression': '#pk = :pk',
             'ExpressionAttributeNames': {'#status': 'status', '#pk': 'pk'},
             'ExpressionAttributeValues': {
-                ':status': {'S': 'null'},
+                ':status': {'S': 'new'},
                 ':pk': {'S': 'user'}
             }
         }
@@ -816,8 +834,9 @@ def lambda_handler(event, context):
     # Log all incoming requests for debugging
     logger.info(f"Incoming request - Method: {event.get('httpMethod')}, Path: {event.get('path')}, QueryParams: {event.get('queryStringParameters')}")
 
-    test_email = None
+    the_email = None
     refresh_mode = False
+    preview_mode = False    
 
     # Handle preflight OPTIONS request
     if event.get('httpMethod') == 'OPTIONS':
@@ -835,59 +854,89 @@ def lambda_handler(event, context):
         except json.JSONDecodeError:
             request_data = event
 
+        # THIS MAY BE NONE
+        the_email = request_data.get('email')
+
 
     ##
     ## IS THIS A TEST EVENT?
     ##
     elif event.get('queryStringParameters'):
-        
-         ## DETECT REFRESH MODE WITH EMAIL PARAMETER HERE
-        request_data = event.get('queryStringParameters', {})
-        
-        # Check for refresh mode with email parameter in test event
-        if request_data.get('refresh') == 'true' and request_data.get('email'):
-            refresh_mode = True
-            test_email = request_data.get('email')
-            logger.info(f"Refresh test mode detected with email: {test_email}")
-            if not test_email:
-                return {
-                    'statusCode': 400,
-                    'body': json.dumps({"message": "Missing email parameter for refresh test mode"}),
-                    'headers': CORS_HEADERS
-                }
+        try:
+            ## DETECT REFRESH MODE WITH EMAIL PARAMETER HERE
+            request_data = event.get('queryStringParameters', {})
+            
+            # Check for refresh mode with email parameter in test event
+            if request_data.get('refresh') == 'true':
+                refresh_mode = True
+    
+            elif request_data.get('preview') == 'true':
+                # we are testing the preview mode
+                preview_mode = True
+
+            # TARGET EMAIL TO SEND NEWSLETTER TO            
+            # THIS MAY BE NONE
+            the_email = request_data.get('email')
 
 
+        except (AttributeError, TypeError) as e:
+            logger.error(f"Malformed queryStringParameters: {e}")
+            return {
+                'statusCode': 400,
+                'body': json.dumps({"message": "Malformed queryStringParameters"}),
+                'headers': CORS_HEADERS
+            }
 
 
 
     # Determine mode: preview, single_shot, or broadcast (default)
     refresh_mode = refresh_mode or (request_data.get('refresh') == 'true')
-    preview_mode = request_data.get('preview_mode') == 'true'
-    single_shot_mode = request_data.get('email') and not preview_mode  # Has email but not preview
-    single_shot_email = request_data.get('email') if single_shot_mode else None
-    preview_email = request_data.get('email') if preview_mode else None
+    preview_mode = preview_mode or (request_data.get('preview') == 'true')
+    single_shot_mode = the_email and not preview_mode  # Has email but not preview
+
+
+    # otherwise we are in broadcast mode
+
     
     if refresh_mode:
-        logger.info("Refresh mode activated")
-        preview_mode = True  # Refresh mode acts like preview mode !! YES !!
+
+        # preview_mode = True  # Refresh mode acts like preview mode
+        if the_email:
+            logger.info(f"Refresh test mode detected with email: {the_email}")       
+        
+        else:
+            return {
+                'statusCode': 400,
+                'body': json.dumps({"message": "Missing email parameter for refresh test mode"}),
+                'headers': CORS_HEADERS
+            }
 
     elif preview_mode:
-        logger.info(f"Preview mode activated for: {preview_email}")
-        if not preview_email:
+        
+        if the_email:
+            logger.info(f"Preview mode activated for: {the_email}")
+        else:
             return {
                 'statusCode': 400,
                 'body': json.dumps({"message": "Missing email parameter for preview mode"}),
                 'headers': CORS_HEADERS
             }
+        
     elif single_shot_mode:
-        logger.info(f"Single shot mode activated for: {single_shot_email}")
-        if not single_shot_email:
+        
+        if the_email:
+            logger.info(f"Single shot mode activated for: {the_email}")
+        else:
             return {
                 'statusCode': 400,
                 'body': json.dumps({"message": "Missing email parameter for single shot mode"}),
                 'headers': CORS_HEADERS
             }
+    
+    
+    ##
     else:
+        # the publisher can be ONLY triggered IF the request includes SECRET_KEY    
         # Regular publish mode - check secret key
         secret_key = os.environ.get('SECRET_KEY')
         if not secret_key:
@@ -919,7 +968,7 @@ def lambda_handler(event, context):
             stories = get_and_update_stories(count=3)
         
         if not stories:
-            if preview_mode or single_shot_mode:
+            if refresh_mode or preview_mode or single_shot_mode:
                 return {
                     'statusCode': 404,
                     'body': json.dumps({"message": "No stories available for newsletter"}),
@@ -937,34 +986,39 @@ def lambda_handler(event, context):
                     'headers': CORS_HEADERS
                 }
         
-        # 2. Render the email version with appropriate link
+
+        ##
+        ## 2. Render the email version with appropriate link
+        ##
         if refresh_mode:
             # Use refresh version with subscribe link
             email_content = render_refresh_version(stories)
             subject = "Lunch is for Wimps - 2nd Chance to Subscribe"
-            gecko_link = EMAIL_SUBSCRIBE
-         
+
         
         elif preview_mode:
-            # Use subscribe link for preview
-            gecko_subscribe_email = EMAIL_SUBSCRIBE
-            email_content = render_email_version_with_subscribe(stories, gecko_subscribe_email)
+
+            # is there intro text?
+            intro_text = request_data.get('intro', None)
+            email_content = render_email_version_with_subscribe(stories, EMAIL_SUBSCRIBE, intro_text)
             subject = os.environ.get('EMAIL_SUBJECT', "Gekko's Birthday * Preview")
+
+
+
         elif single_shot_mode:
             # Use unsubscribe link for single shot (like regular publish)
-            gecko_link = EMAIL_TARGET  # Unsubscribe email
-            email_content = render_email_version(stories, gecko_link)
+            email_content = render_email_version(stories, EMAIL_UNSUB)
             
             # Construct subject for single shot
             title_dict = stories[0].get('title', {})
             title_str = title_dict.get('S', '') if isinstance(title_dict, dict) else str(title_dict)
             subject_snippet = extract_subject_snippet(title_str, num_words=5)
             subject = subject_snippet
+        
         else:
             # Use unsubscribe link for broadcast publish
-            gecko_link = EMAIL_TARGET  # Unsubscribe email
-            email_content = render_email_version(stories, gecko_link)
-            
+            email_content = render_email_version(stories, EMAIL_UNSUB)
+
             # Construct subject for broadcast publish
             title_dict = stories[0].get('title', {})
             title_str = title_dict.get('S', '') if isinstance(title_dict, dict) else str(title_dict)
@@ -972,20 +1026,23 @@ def lambda_handler(event, context):
             subject = subject_snippet
         
 
-
-        # 3. Send emails
+        ##
+        ## 3. Send emails
+        ##
+        
+        ## REFRESH MODE
         if refresh_mode:
             # Check if this is a test mode (has email parameter)
 
             # test_email WILL be set here if coming from test event
-            if test_email:
+            if the_email:
                 # TEST MODE: Send single-shot email for refresh testing
-                success = send_single_email(test_email, email_content, subject)
+                success = send_single_email(the_email, email_content, subject)
             
                 return {
                     'statusCode': 200,
                     'body': json.dumps({
-                        "message": f"Refresh newsletter TEST sent to {test_email}",
+                        "message": f"Refresh newsletter TEST sent to {the_email}",
                         "stories_count": len(stories),
                         "mode": "refresh_test"
                     }),
@@ -994,7 +1051,8 @@ def lambda_handler(event, context):
             
 
             else:
-                # PRODUCTION MODE: Send to all non-subscribers (broadcast mode)
+                # REFRESH ALL NON-SUBSCRIBERS
+                # Send to all non-subscribers (broadcast mode)
                 subscribers = get_non_subscribers()
                 if not subscribers:
                     return {
@@ -1023,28 +1081,33 @@ def lambda_handler(event, context):
 
         elif preview_mode:
             # Send single preview email
-            success = send_single_email(preview_email, email_content, subject)
+            success = send_single_email(the_email, email_content, subject)
             return {
                 'statusCode': 200,
                 'body': json.dumps({
-                    "message": f"Newsletter sent to {preview_email}",
+                    "message": f"Newsletter sent to {the_email}",
                     "stories_count": len(stories)
                 }),
                 'headers': CORS_HEADERS
             }
+        
+
         elif single_shot_mode:
             # Send single newsletter to new subscriber
-            success = send_single_email(single_shot_email, email_content, subject)
+            success = send_single_email(the_email, email_content, subject)
             return {
                 'statusCode': 200,
                 'body': json.dumps({
-                    "message": f"First newsletter sent to {single_shot_email}",
+                    "message": f"First newsletter sent to {the_email}",
                     "stories_count": len(stories)
                 }),
                 'headers': CORS_HEADERS
             }
+        
+        ##
+        ## BROADCAST MODE TO ALL SUBSCRIBERS
+        ##
         else:
-            # Send to all subscribers (broadcast mode)
             subscribers = get_subscribers()
             if not subscribers:
                 return {
@@ -1069,7 +1132,7 @@ def lambda_handler(event, context):
         return {
             'statusCode': 500,
             'body': json.dumps({"message": f"Error: {str(e)}"}),
-            'headers': CORS_HEADERS
+            'headers': CORS_HEADERS##
         }
 
 

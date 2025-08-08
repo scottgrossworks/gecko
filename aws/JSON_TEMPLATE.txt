@@ -32,15 +32,63 @@ Let's connect!
 }
 
 
-If AI flattens the org chart and squeezes out middle-management, then why get an MBA?  Will employers value strategic frameworks and management skills when teams manage themselves with AI support?  Instead of case study theater, business schools must refocus on data fluency, AI literacy and tooling, and training students to act (and ship) as independent operators.
+
+ Delta
+ Cintas
+ JP Morgan
+ Bank of America
+ Netflix
+ Wells Fargo
+ Tesla
+ Intel
+ Amazon
+ Honda
+ Uber
+ CVS
+ Apple
+ MacDonald
+ Home Depot
+ Snowflake
+ Reddit
+ Dollar Tree
+ 
+ 
+ NVIDIA
+ 
+ WalMart
+ 
  
 
-
 {
-  "title": "AI Kills Middle Management",
-  "summary": "As AI automates information routing, decision tracking, and task coordination, the traditional role of middle management becomes obsolete. At Fireflies.ai, a flat hierarchy powered by AI enables individual contributors to act with executive-level autonomy. Employees use AI to detect patterns, propose product changes, and adjust strategy without managerial oversight. The 'flat' org chart of the future will empower workers to be their own 'mini-CEOs' operating at the speed of AI.",
-  "category": "MBA",
-  "tags": ["AI", "MBA"],
-  "take": "Why get an MBA?  Will employers value strategic frameworks and management skills when teams manage themselves with AI support?  Instead of case study theater, business schools must refocus on data fluency, AI literacy and tooling, project-based work, and training students to act (and ship) as independent operators.",
-  "url": "https://www.fastcompany.com/91377552/middle-management-is-dead"
+  "title": "Tariffs Not the Problem",
+  "summary": "President Trump threatened to impose tariffs of approximately 100% on semiconductors not built in the U.S. In response, NVIDIA pledged to invest up to $500 billion in U.S. AI infrastructure over four years. Apple committed another $100 billion in U.S. investment, including $2.5 billion for manufacturing in Kentucky. Analysts doubt these pledges will meaningfully shift manufacturing away from Asia.",
+  "category": "Markets",
+  "tags": ["NVIDIA", "Trump", "Tariffs", "Semiconductors", "China", "TSMC"],
+  "take": "NVIDIA is too-important to fail, but the ground trembles beneath them. TSMC is vulnerable to China. 87% of revenue comes from data centers, at a time when hyperscalers are either cutting back or building their own chips. By the time export bans or tariffs are lifted, China, Amazon, and Google won't need NVIDIA anymore.",
+  "url": "https://www.marketwatch.com/story/why-nvidia-and-other-chip-stocks-are-shrugging-off-trumps-latest-tariff-threat-271f4562"
 }
+
+ 
+ 
+ 
+ {
+  "queryStringParameters": {
+    "refresh_mode": "true",
+    "email": "test@example.com"
+  }
+}
+
+
+
+
+I noticed you didn't Subscribe to Gekko's Birthday from the preview I sent you.&nbsp;&nbsp;I also notice you didn't get rich like me, Gordon Gekko.&nbsp;&nbsp;I'm talking talking *liquid*. Rich enough to have your own jet.&nbsp;&nbsp;Rich enough not to waste time.&nbsp;&nbsp;$50, $100 million dollars, buddy. A player.
+
+
+url: https://venturebeat.com/ai/why-the-ai-era-is-forcing-a-redesign-of-the-entire-compute-backbone/
+
+Summary: 
+
+An industry-wide focus on performance per dollar and per watt is fundamentally rewriting every IT framework to meet the demands of generative AI.  This includes specialized hardware like GPUs, ASICs, and TPUs, new network interconnects (NVLink, ICI), high-bandwidth memory, and ultra-dense, energy-efficient data centers.  The transition will require rapid, large-scale deployments of homogeneous hardware, where fault tolerance, power management and security are paramount.
+
+
+
