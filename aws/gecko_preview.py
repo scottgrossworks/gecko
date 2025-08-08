@@ -168,11 +168,18 @@ def lambda_handler(event, context):
             logger.error(f"Error creating preview user profile: {str(e)}")
             # Continue anyway - don't fail preview if user creation fails
         
+
+        # is there an intro message?
+        intro_text = query_params.get('intro', None)
+
+
+
         # Step 2: Send preview email via publisher
         try:
             publisher_payload = {
                 'queryStringParameters': {
-                    'preview_mode': 'true',
+                    'preview': 'true',
+                    'intro': intro_text,
                     'email': single_recipient
                 }
             }

@@ -42,6 +42,10 @@ This html page contains a form for capturing a potential new subscriber
         <label for="interests">Interests (optional, comma separated):</label>
         <input type="text" id="interests" name="interests">
 
+
+        <label for="intro">Introduction:</label>
+        <input type="text" id="intro" name="intro">
+
         <BR>
         <center>
           <button type="submit" class="gecko-btn" style="font-size:1.5em;width:300px">Send Me a Preview</button>
@@ -79,9 +83,15 @@ This html page contains a form for capturing a potential new subscriber
         e.preventDefault();
         return;
       }
+
+
+      // GET THE FORM DATA FROM dashboard.html
       e.preventDefault();
       var formData = new FormData(this);
       var params = new URLSearchParams(formData).toString();
+
+
+
       button.disabled = true;
       fetch('https://unha4lumv1.execute-api.us-west-2.amazonaws.com/prod/preview?' + params)
         .then(res => res.ok ? res.json() : Promise.reject())
